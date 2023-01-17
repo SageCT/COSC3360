@@ -1,10 +1,22 @@
 #ifndef HUFFMANTREE_H
 #define HUFFMANTREE_H
 
+struct node {
+  char data;
+  int freq;
+  node *left;
+  node *right;
+};
+
+
 class huffmanTree {
  public:
   huffmanTree();
   ~huffmanTree();
 };
 
-#endif HUFFMANTREE_H
+huffmanTree::huffmanTree(){
+
+}
+
+#endif
