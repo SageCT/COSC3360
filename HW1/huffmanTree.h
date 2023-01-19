@@ -16,21 +16,21 @@ public:
   int size;
   node *head;
   huffmanTree() : size(0), head(nullptr){};
-  huffmanTree(map<char, int> &m) : size(m.size()), head(nullptr) {
+  huffmanTree(map<int, char> &m) : size(m.size()), head(nullptr) {
     buildHuffmanTree(m);
   };
   ~huffmanTree();
-  void buildHuffmanTree(map<char, int> &m);
+  void buildHuffmanTree(map<int, char> &m);
+  void print();
 };
 
-void huffmanTree::buildHuffmanTree(map<char, int> &m) {
+void huffmanTree::buildHuffmanTree(map<int, char> &m) {
   auto it = m.end();
-  head = new node;
-  head->data = it->first;
-  head->freq = it->second;
-  it--;
-  for (it; it != m.begin(); it--)
-    cout << it->first << " " << it->second << endl;
+  auto stopAt = ++m.begin();
+
+  for (it; it != stopAt; it--) {
+    // node *left = new node;
+  }
 }
 
 #endif
