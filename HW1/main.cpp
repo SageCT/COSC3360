@@ -2,6 +2,7 @@
 #include <fstream>
 #include <iostream>
 #include <map>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -12,8 +13,11 @@ using namespace std;
 int main() {
   string in, toAdd;
   int counter = 0;
+  // map with the huffman codes and their positions in the encoded string
   map<int, vector<int>> codes;
+  // map with the characters and their frequencies
   map<char, int> m;
+
   cin >> in;
   cin >> in;
   in.clear();
@@ -26,36 +30,27 @@ int main() {
 
     getline(cin, in);
   }
+  while (getline(cin, in)) {
+    if (isdigit(in.at(0))) {
+      toAdd = "";
+      vector<int> temp;
+      // Find the code in the string
+      toAdd += in.substr(0, in.find(" ") - 1);
 
-  if (isdigit(in.at(0))) {
-    toAdd = "";
-    vector<int> temp;
-    // Find the code in the string
-    toAdd += in.substr(0, in.find(" ") - 1);
-    // Erase the code from the input string
-    in.erase(0, in.find(" ") + 1);
+      // Erase the code from the input string
+      in.erase(0, in.find(" ") + 1);
 
-    // While the input string is not empty push back the digits until you find a
-    // space or the end of the string
-    while (in.size() > 0) {
-      if (in.find(" ") == string::npos) {
-        temp.push_back(stoi(in));
-      } else if (in.find(" ") != string::npos)
-        temp.push_back(stoi(in.substr(0, in.find(" ") - 1)));
-    }
-    temp.push_back(stoi());
+      stringstream ss(in);
+      int i;
 
-    while (getline(cin, in)) {
+      while (ss >> i) temp.push_back(i);
+
+      codes.insert(pair<int, vector<int>>(stoi(toAdd), temp));
     }
   }
 
   // huffmanTree tree(m);
-  toAdd = "";
-  while (counter > 0) {
-    in.find(" ");
-
-    counter--;
-  }
+  // tree.printTree();
 
   return 0;
 }
