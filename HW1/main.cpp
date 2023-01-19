@@ -14,8 +14,12 @@ int main() {
   map<char, vector<char>> codes;
   int counter = 0;
   map<int, char> m;
+  cin >> in;
+  cin >> in;
+  in.clear();
 
-  // Gets line from STDIN, and checks if the first character is a digit
+  // Gets line from STDIN, and checks if the first character is a digit,
+  // if not a digit adds to map
   getline(cin, in);
   while (!isdigit(in.at(0))) {
     if (isalpha(in.at(0)))
@@ -28,15 +32,7 @@ int main() {
   // huffmanTree tree(m);
   toAdd = "";
   while (counter > 0) {
-    if (isdigit(in.at(0))) {
-      toAdd += in.at(0);
-      in.erase(0, 1);
-      while (isdigit(in.at(0))) {
-        toAdd += in.at(0);
-        in.erase(0, 1);
-      }
-    }
-    in.erase(0, 1);
+    in.find(" ");
 
     counter--;
   }
