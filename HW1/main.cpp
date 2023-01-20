@@ -18,35 +18,49 @@ int main() {
   // map with the characters and their frequencies
   map<char, int> m;
 
-  cin >> in;
-  cin >> in;
+  getline(cin, in);
+  getline(cin, in);
   in.clear();
 
   // Gets line from STDIN, and checks if the first character is a digit,
   // if not a digit adds to map
   getline(cin, in);
   while (isalpha(in.at(0))) {
-    m.insert(pair<char, int>(in.at(0), in.at(3))), counter++;
-
+    string temp = "";
+    temp += in.at(2);
+    m.insert(pair<char, int>(in.at(0), stoi(temp))), counter++;
     getline(cin, in);
   }
-  while (getline(cin, in)) {
-    if (isdigit(in.at(0))) {
-      toAdd = "";
-      vector<int> temp;
-      // Find the code in the string
-      toAdd += in.substr(0, in.find(" ") - 1);
+  while (counter > 0 && isdigit(in.at(0))) {
+    toAdd = "";
+    vector<int> temp;
+    // Find the code in the string
+    toAdd += in.substr(0, in.find(" "));
 
-      // Erase the code from the input string
-      in.erase(0, in.find(" ") + 1);
+    // Erase the code from the input string
+    in.erase(0, in.find(" ") + 1);
 
-      stringstream ss(in);
-      int i;
+    stringstream ss(in);
+    int i;
 
-      while (ss >> i) temp.push_back(i);
+    while (ss >> i) temp.push_back(i);
+    codes.insert(pair<int, vector<int>>(stoi(toAdd), temp));
+    counter--;
+    getline(cin, in);
+  }
 
-      codes.insert(pair<int, vector<int>>(stoi(toAdd), temp));
+  cout << "Letters and their frequencies: " << endl;
+  for (auto it = m.begin(); it != m.end(); ++it) {
+    cout << it->first << " " << it->second << endl;
+  }
+
+  cout << "Huffman codes and their positions: " << endl;
+  for (auto it = codes.begin(); it != codes.end(); ++it) {
+    cout << it->first << " ";
+    for (int i = 0; i < it->second.size(); i++) {
+      cout << it->second.at(i) << " ";
     }
+    cout << endl;
   }
 
   // huffmanTree tree(m);
