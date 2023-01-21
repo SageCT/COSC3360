@@ -4,7 +4,6 @@
 #include <map>
 #include <sstream>
 #include <string>
-#include <vector>
 
 #include "huffmanTree.h"
 
@@ -16,7 +15,7 @@ int main() {
   // map with the huffman codes and their positions in the encoded string
   map<int, vector<int>> codes;
   // map with the characters and their frequencies
-  map<char, int> m;
+  map<int, char> m;
 
   getline(cin, in);
   getline(cin, in);
@@ -28,10 +27,10 @@ int main() {
   while (isalpha(in.at(0))) {
     string temp = "";
     temp += in.at(2);
-    m.insert(pair<char, int>(in.at(0), stoi(temp))), counter++;
+    m.insert(pair<int, char>(stoi(temp), in.at(0))), counter++;
     getline(cin, in);
   }
-  while (counter > 1 && isdigit(in.at(0))) {
+  while (counter > 0 && isdigit(in.at(0))) {
     toAdd = "";
     vector<int> temp;
     // Find the code in the string
@@ -47,6 +46,8 @@ int main() {
       temp.push_back(i);
     codes.insert(pair<int, vector<int>>(stoi(toAdd), temp));
     counter--;
+    if (counter == 0)
+      break;
     getline(cin, in);
   }
 

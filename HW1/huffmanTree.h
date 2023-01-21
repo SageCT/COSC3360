@@ -1,7 +1,9 @@
 #ifndef HUFFMANTREE_H
 #define HUFFMANTREE_H
 
+#include <iostream>
 #include <map>
+#include <queue>
 
 using namespace std;
 struct node {
@@ -19,18 +21,17 @@ public:
   huffmanTree(map<int, char> &m) : size(m.size()), head(nullptr) {
     buildHuffmanTree(m);
   };
-  ~huffmanTree();
   void buildHuffmanTree(map<int, char> &m);
   void print();
 };
 
 void huffmanTree::buildHuffmanTree(map<int, char> &m) {
-  auto it = m.end();
-  auto stopAt = ++m.begin();
+  // Flip the input map from char int to int char
 
-  for (it; it != stopAt; it--) {
-    // node *left = new node;
-  }
+  // Create a priority queue to store live nodes of Huffman tree
+  // priority_queue priQueue(m.begin(), m.end(), std::greater<int>());
 }
+
+void huffmanTree::print() {}
 
 #endif
