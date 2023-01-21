@@ -31,7 +31,7 @@ int main() {
     m.insert(pair<char, int>(in.at(0), stoi(temp))), counter++;
     getline(cin, in);
   }
-  while (counter > 0 && isdigit(in.at(0))) {
+  while (counter > 1 && isdigit(in.at(0))) {
     toAdd = "";
     vector<int> temp;
     // Find the code in the string
@@ -43,7 +43,8 @@ int main() {
     stringstream ss(in);
     int i;
 
-    while (ss >> i) temp.push_back(i);
+    while (ss >> i)
+      temp.push_back(i);
     codes.insert(pair<int, vector<int>>(stoi(toAdd), temp));
     counter--;
     getline(cin, in);
