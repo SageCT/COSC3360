@@ -1,7 +1,6 @@
 #include <algorithm>
 #include <fstream>
 #include <iostream>
-#include <map>
 #include <sstream>
 #include <string>
 
@@ -12,10 +11,10 @@ using namespace std;
 int main() {
   string in, toAdd;
   int counter = 0;
-  // map with the huffman codes and their positions in the encoded string
-  map<int, vector<int>> codes;
+  // struct with the codes and their positions in a vector of ints
+  vector<code *> codes;
   // vector with the characters and their frequencies
-  vector<pair<int, char>> freq;
+  vector<node *> freq;
 
   getline(cin, in);
   getline(cin, in);
@@ -27,7 +26,14 @@ int main() {
   while (isalpha(in.at(0))) {
     string temp = "";
     temp += in.at(2);
-    freq.push_back(make_pair(stoi(temp), in.at(0))), counter++;
+
+    // Make node and push to vector
+    node *newNode;
+    newNode->data = in.at(0);
+    newNode->freq = stoi(temp);
+    newNode->left = nullptr;
+    newNode->right = nullptr;
+    freq.push_back(newNode), counter++;
     getline(cin, in);
   }
 
@@ -45,7 +51,11 @@ int main() {
 
     while (ss >> i)
       temp.push_back(i);
-    codes.insert(pair<int, vector<int>>(stoi(toAdd), temp));
+    code *newCode;
+    newCode->data = stoi(toAdd);
+    newCode->pos = temp;
+    codes.push_back(newCode);
+
     counter--;
     if (counter == 0)
       break;
@@ -53,20 +63,19 @@ int main() {
   }
 
   cout << "Letters and their frequencies: " << endl;
-  for (auto it = freq.begin(); it != freq.end(); ++it) {
-    cout << it->first << " " << it->second << endl;
-  }
+  for (int i = 0; i < freq.size(); i++)
+    cout << freq.at(i)->data << " " << freq.at(i)->freq << endl;
 
   cout << "Huffman codes and their positions: " << endl;
-  for (auto it = codes.begin(); it != codes.end(); ++it) {
-    cout << it->first << " ";
-    for (int i = 0; i < it->second.size(); i++) {
-      cout << it->second.at(i) << " ";
-    }
+  for (int i = 0; i < codes.size(); i++) {
+    cout << codes.at(i)->data << " ";
+    for (int j = 0; j < codes.at(i)->pos.size(); j++)
+      cout << codes.at(i)->pos.at(j) << " ";
     cout << endl;
   }
 
   huffmanTree tree(freq);
+  // tree.decode(codes);
   // tree.printTree();
 
   return 0;
