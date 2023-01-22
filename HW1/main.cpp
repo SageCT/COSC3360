@@ -14,8 +14,8 @@ int main() {
   int counter = 0;
   // map with the huffman codes and their positions in the encoded string
   map<int, vector<int>> codes;
-  // map with the characters and their frequencies
-  map<int, char> m;
+  // vector with the characters and their frequencies
+  vector<pair<int, char>> freq;
 
   getline(cin, in);
   getline(cin, in);
@@ -27,9 +27,10 @@ int main() {
   while (isalpha(in.at(0))) {
     string temp = "";
     temp += in.at(2);
-    m.insert(pair<int, char>(stoi(temp), in.at(0))), counter++;
+    freq.push_back(make_pair(stoi(temp), in.at(0))), counter++;
     getline(cin, in);
   }
+
   while (counter > 0 && isdigit(in.at(0))) {
     toAdd = "";
     vector<int> temp;
@@ -52,7 +53,7 @@ int main() {
   }
 
   cout << "Letters and their frequencies: " << endl;
-  for (auto it = m.begin(); it != m.end(); ++it) {
+  for (auto it = freq.begin(); it != freq.end(); ++it) {
     cout << it->first << " " << it->second << endl;
   }
 
@@ -65,7 +66,7 @@ int main() {
     cout << endl;
   }
 
-  // huffmanTree tree(m);
+  huffmanTree tree(freq);
   // tree.printTree();
 
   return 0;

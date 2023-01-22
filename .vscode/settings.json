@@ -2,6 +2,10 @@
   "files.associations": {
     "ostream": "cpp",
     "xstring": "cpp",
-    "string": "cpp"
+    "string": "cpp",
+    "*.tcc": "cpp",
+    "deque": "cpp",
+    "unordered_map": "cpp",
+    "vector": "cpp"
   }
 }

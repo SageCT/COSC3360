@@ -13,25 +13,54 @@ struct node {
   node *right;
 };
 
-class huffmanTree {
+class Compare {
 public:
-  int size;
-  node *head;
-  huffmanTree() : size(0), head(nullptr){};
-  huffmanTree(map<int, char> &m) : size(m.size()), head(nullptr) {
-    buildHuffmanTree(m);
-  };
-  void buildHuffmanTree(map<int, char> &m);
+  bool operator()(node *L, node *r) { return (L->freq > r->freq); }
+};
+
+class huffmanTree {
+private:
+  priority_queue<node *, vector<node *>, Compare> pq;
+
+public:
+  huffmanTree(vector<pair<int, char>> &v) { buildHuffmanTree(v); };
+  void buildHuffmanTree(vector<pair<int, char>> &);
+  friend bool operator<(const pair<int, char> &, const pair<int, char> &);
   void print();
 };
 
-void huffmanTree::buildHuffmanTree(map<int, char> &m) {
-  // Flip the input map from char int to int char
-
-  // Create a priority queue to store live nodes of Huffman tree
-  // priority_queue priQueue(m.begin(), m.end(), std::greater<int>());
+// Overload the < operator for the priority queue
+bool operator<(const pair<int, char> &a, const pair<int, char> &b) {
+  return (a.first > b.first);
 }
 
-void huffmanTree::print() {}
+void huffmanTree::buildHuffmanTree(vector<pair<int, char>> &v) {
+  // Create nodes from the pairs passed
+  for (int i = 0; i < v.size(); i++) {
+    node *temp = new node;
+    temp->data = v.at(i).second;
+    temp->freq = v.at(i).first;
+    temp->left = nullptr;
+    temp->right = nullptr;
+    pq.push(temp);
+  }
+
+  // Create a priority queue to store nodes for Huffman tree
+
+  for (int i = 0; i < v.size(); i++) {
+    pq.push(v.at(i));
+  }
+
+  // TESTING PRINTING OUT THE PRIORITY QUEUE
+  print();
+}
+
+void huffmanTree::print() {
+  while (!pq.empty()) {
+    cout << "Symbol: " << pq.top().second << ", Frequency : " << pq.top().first
+         << ", Code: N/A" << endl;
+    pq.pop();
+  }
+}
 
 #endif
