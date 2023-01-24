@@ -24,7 +24,11 @@ struct code {
 
 class Compare {
 public:
-  bool operator()(node *L, node *r) { return (L->freq > r->freq); }
+  bool operator()(node *L, node *r) {
+    if (L->freq == r->freq)
+      return (L->data < r->data);
+    return (L->freq < r->freq);
+  }
 };
 
 class huffmanTree {
@@ -48,6 +52,7 @@ void huffmanTree::buildHuffmanTree(vector<node *> &n) {
   // Add nodes to a priority queue to create the Huffman tree
   for (int i = 0; i < n.size(); i++)
     pq.push(n.at(i));
+
 
   // TESTING PRINTING OUT THE PRIORITY QUEUE
   print();
