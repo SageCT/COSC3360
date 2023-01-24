@@ -28,11 +28,7 @@ int main() {
     temp += in.at(2);
 
     // Make node and push to vector
-    node *newNode;
-    newNode->data = in.at(0);
-    newNode->freq = stoi(temp);
-    newNode->left = nullptr;
-    newNode->right = nullptr;
+    node *newNode = new node(in.substr(0, 1), stoi(temp));
     freq.push_back(newNode), counter++;
     getline(cin, in);
   }
@@ -51,9 +47,8 @@ int main() {
 
     while (ss >> i)
       temp.push_back(i);
-    code *newCode;
-    newCode->data = stoi(toAdd);
-    newCode->pos = temp;
+    code *newCode = new code(stoi(toAdd), temp);
+
     codes.push_back(newCode);
 
     counter--;

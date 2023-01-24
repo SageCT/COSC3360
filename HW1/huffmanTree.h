@@ -7,11 +7,12 @@
 
 using namespace std;
 struct node {
-  char data;
+  string data;
   int freq;
   node *left;
   node *right;
-  node(char data, int freq)
+  node() : data(""), freq(0), left(nullptr), right(nullptr) {}
+  node(string data, int freq)
       : data(data), freq(freq), left(nullptr), right(nullptr) {}
 };
 
@@ -44,21 +45,9 @@ bool operator<(const pair<int, char> &a, const pair<int, char> &b) {
 }
 
 void huffmanTree::buildHuffmanTree(vector<node *> &n) {
-  // Create nodes from the pairs passed
-  for (int i = 0; i < n.size(); i++) {
-    node *temp = new node;
-    temp->data = n.at(i)->data;
-    temp->freq = n.at(i)->freq;
-    temp->left = nullptr;
-    temp->right = nullptr;
-    pq.push(temp);
-  }
-
-  // Create a priority queue to store nodes for Huffman tree
-
-  for (int i = 0; i < n.size(); i++) {
+  // Add nodes to a priority queue to create the Huffman tree
+  for (int i = 0; i < n.size(); i++)
     pq.push(n.at(i));
-  }
 
   // TESTING PRINTING OUT THE PRIORITY QUEUE
   print();
@@ -68,7 +57,7 @@ void huffmanTree::decode(vector<code *> &c) {}
 
 void huffmanTree::print() {
   while (!pq.empty()) {
-    cout << "Symbol: " << pq.top().second << ", Frequency : " << pq.top().first
+    cout << "Symbol: " << pq.top()->data << ", Frequency : " << pq.top()->freq
          << ", Code: N/A" << endl;
     pq.pop();
   }
