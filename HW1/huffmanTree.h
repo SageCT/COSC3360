@@ -23,19 +23,20 @@ struct code {
 };
 
 class Compare {
- public:
+public:
   bool operator()(node *L, node *R) {
-    if (L->freq == R->freq) return (L->data > R->data);
+    if (L->freq == R->freq)
+      return (L->data > R->data);
     return (L->freq > R->freq);
   }
 };
 
 class huffmanTree {
- private:
+private:
   priority_queue<node *, vector<node *>, Compare> pq;
   node *root;
 
- public:
+public:
   huffmanTree() : root(nullptr) {}
   huffmanTree(vector<node *> &n) : root(nullptr) { buildHuffmanTree(n); };
   void buildHuffmanTree(vector<node *> &);
@@ -46,7 +47,8 @@ class huffmanTree {
 
 void huffmanTree::buildHuffmanTree(vector<node *> &n) {
   // Add nodes to a priority queue to create the Huffman tree
-  for (int i = 0; i < n.size(); i++) pq.push(n.at(i));
+  for (int i = 0; i < n.size(); i++)
+    pq.push(n.at(i));
 
   // Building the Huffman tree
 
@@ -60,14 +62,14 @@ void huffmanTree::buildHuffmanTree(vector<node *> &n) {
 
     // Create a new node with the sum of the frequencies of the two smaller
     // nodes, this will be the parent node
-    node *parent = new node("", left->freq + right->freq);
+    node *parent = new node("~~", left->freq + right->freq);
     parent->left = left;
     parent->right = right;
     // Because the nodes will always be sorted in the priority queue, we can
     // just add the parent back the the queue
     pq.push(parent);
-    // set the parent as the root
-    parent = root;
+    // set the root as the parent
+    root = parent;
   }
 
   // TESTING PRINTING OUT THE PRIORITY QUEUE
@@ -75,21 +77,39 @@ void huffmanTree::buildHuffmanTree(vector<node *> &n) {
 }
 
 void huffmanTree::decode(vector<code *> &c) {
-  string result(c.size(), '$');
-  cout << "Result: " << result << endl;
+
+  // Find the largest position to find the length of the final string
+  int max = 0;
+
+  for (int i = 0; i < c.size(); i++)
+    for (int j = 0; j < c.at(i)->pos.size(); j++)
+      if (max < c.at(i)->pos.at(j))
+        max = c.at(i)->pos.at(j);
+
   for (int i = 0; i < c.size(); i++) {
-    int currCode = c.at(i)->data;
-    for (auto position : c.at(i)->pos) {
+    string currCode = to_string(c.at(i)->data);
+    node *cu = root;
+
+    for (int j = 0; j < currCode.size(); j++) {
+      // If current char is 0, go left
+      //  If current char is 1, go right
+      currCode.at(j) == '0' ? cu = cu->left : cu = cu->right;
     }
+
+    // Once you get the result from the decode, add the data in the position in
+    // the string
+    for (auto position : c.at(i)->pos)
+      result.insert(position, cu->data);
   }
 }
 
 void huffmanTree::print() {
-  while (!pq.empty()) {
-    cout << "Symbol: " << pq.top()->data << ", Frequency : " << pq.top()->freq
-         << ", Code: N/A" << endl;
-    pq.pop();
-  }
+  // while (!pq.empty()) {
+  //   cout << "Symbol: " << pq.top()->data << ", Frequency : " <<
+  //   pq.top()->freq
+  //        << ", Code: N/A" << endl;
+  //   pq.pop();
+  // }
 }
 
 #endif
