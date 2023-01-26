@@ -2,7 +2,6 @@
 #define HUFFMANTREE_H
 
 #include <iostream>
-#include <map>
 #include <queue>
 
 using namespace std;
@@ -35,7 +34,7 @@ class huffmanTree {
 private:
   priority_queue<node *, vector<node *>, Compare> pq;
   node *root;
-  node *printInOrder(node *);
+  node *printInOrder(node *, string = "");
 
 public:
   huffmanTree() : root(nullptr) {}
@@ -43,7 +42,7 @@ public:
   void buildHuffmanTree(vector<node *> &);
   friend bool operator<(const pair<int, char> &, const pair<int, char> &);
   void decode(vector<code *> &);
-  void print();
+  void print() { printInOrder(root); };
 };
 
 void huffmanTree::buildHuffmanTree(vector<node *> &n) {
@@ -106,17 +105,16 @@ void huffmanTree::decode(vector<code *> &c) {
   }
 }
 
-void huffmanTree::print() { printInOrder(root); }
-
-node *huffmanTree::printInOrder(node *n) {
+node *huffmanTree::printInOrder(node *n, string c) {
+  node *temp = n;
   if (n == nullptr)
     return nullptr;
-  printInOrder(n->left);
+  printInOrder(n->left, c + "0");
   if (n->data != "\0") {
-    cout << "Symbol: " << n->data << ", Frequency : " << n->freq
-         << ", Code: N/A" << endl;
+    std::cout << "Symbol: " << n->data << ", Frequency : " << n->freq
+         << ", Code: " << c << endl;
   }
-  printInOrder(n->right);
+  printInOrder(n->right, c + "1");
   return n;
 }
 

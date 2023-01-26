@@ -16,57 +16,60 @@ int main() {
   // vector with the characters and their frequencies
   vector<node *> freq;
 
-  getline(cin, in);
-  getline(cin, in);
-  in.clear();
+  string inputFileName, compressedFileName;
+  cin >> inputFileName >> compressedFileName;
+  ifstream inputFile(inputFileName), compressedFile(compressedFileName);
 
-  // Gets line from STDIN, and checks if the first character is a digit,
-  // if not a digit adds to map
-  getline(cin, in);
-  while (isalpha(in.at(0))) {
-    string temp = "";
-    temp += in.at(2);
+  // Gets line from inputFile, and checks if the first character is a digit,
+  // if not a digit adds to a vector of nodes
+  while (getline(inputFile, in)) {
+    if (isalpha(in.at(0))) {
+      string temp = "";
+      temp += in.at(2);
 
-    // Make node and push to vector
-    node *newNode = new node(in.substr(0, 1), stoi(temp));
-    freq.push_back(newNode), counter++;
-    getline(cin, in);
+      // Make node and push to vector
+      node *newNode = new node(in.substr(0, 1), stoi(temp));
+      freq.push_back(newNode), counter++;
+    }
   }
 
-  while (counter > 0 && isdigit(in.at(0))) {
-    toAdd = "";
-    vector<int> temp;
-    // Find the code in the string
-    toAdd += in.substr(0, in.find(" "));
+  inputFile.close();
 
-    // Erase the code from the input string
-    in.erase(0, in.find(" ") + 1);
+  while (getline(compressedFile, in)) {
+    if (counter > 0 && isdigit(in.at(0))) {
+      toAdd = "";
+      vector<int> temp;
+      // Find the code in the string
+      toAdd += in.substr(0, in.find(" "));
 
-    stringstream ss(in);
-    int i;
+      // Erase the code from the input string
+      in.erase(0, in.find(" ") + 1);
 
-    while (ss >> i)
-      temp.push_back(i);
-    code *newCode = new code(stoi(toAdd), temp);
+      stringstream ss(in);
+      int i;
 
-    codes.push_back(newCode);
+      while (ss >> i)
+        temp.push_back(i);
+      code *newCode = new code(stoi(toAdd), temp);
 
-    counter--;
-    if (counter == 0)
-      break;
-    getline(cin, in);
+      codes.push_back(newCode);
+
+      counter--;
+      if (counter == 0)
+        break;
+    }
   }
 
-  cout << "Letters and their frequencies: " << endl;
+  std::cout << "Letters and their frequencies: " << endl;
   for (int i = 0; i < freq.size(); i++)
-    cout << freq.at(i)->data << " " << freq.at(i)->freq << endl;
+    std::cout << freq.at(i)->data << " " << freq.at(i)->freq << endl;
 
-  cout << "Huffman codes and their positions: " << endl;
+  std::cout << "Huffman codes and their positions: " << endl;
   for (int i = 0; i < codes.size(); i++) {
-    cout << codes.at(i)->data << " ";
+    std::cout << codes.at(i)->data << " ";
     for (int j = 0; j < codes.at(i)->pos.size(); j++)
-      cout << codes.at(i)->pos.at(j) << " ";
-    cout << endl;
+      std::cout << codes.at(i)->pos.at(j) << " ";
+    std::cout << endl;
   }
 
   huffmanTree tree(freq);
