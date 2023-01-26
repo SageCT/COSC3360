@@ -5,8 +5,9 @@
 using namespace std;
 
 int main() {
-  string a(10, 'x');
+  string a = "B";
+  string b = "A";
 
-  cout << a << endl;
+  cout << ("B" > "B") << endl;
   return 0;
 }

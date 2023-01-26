@@ -70,7 +70,7 @@ int main() {
   }
 
   huffmanTree tree(freq);
-  tree.decode(codes);
+  // tree.decode(codes);
   // tree.printTree();
 
   return 0;
