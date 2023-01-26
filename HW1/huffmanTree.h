@@ -16,34 +16,35 @@ struct node {
 };
 
 struct code {
-  int data;
+  string data;
   vector<int> pos;
-  code(int data, vector<int> pos) : data(data), pos(pos) {}
+  code(string data, vector<int> pos) : data(data), pos(pos) {}
 };
 
 class Compare {
-public:
+ public:
   bool operator()(node *L, node *R) {
-    if (L->freq == R->freq)
-      return (L->data > R->data);
-    return (L->freq > R->freq);
+    if (L->freq == R->freq) {
+      if (L->data == R->data) return (L < R);
+      return L->data > R->data;
+    }
+    return L->freq > R->freq;
   }
 };
 
 class huffmanTree {
-private:
+ private:
   priority_queue<node *, vector<node *>, Compare> pq;
   node *root;
   string decodedMessage;
   node *printInOrder(node *, string = "");
 
-public:
+ public:
   huffmanTree() : root(nullptr) {}
   huffmanTree(vector<node *> &n) : root(nullptr) { buildHuffmanTree(n); };
   void buildHuffmanTree(vector<node *> &);
-  friend bool operator<(const pair<int, char> &, const pair<int, char> &);
   void decode(vector<code *> &);
-  
+
   void print() {
     printInOrder(root);
     std::cout << "Original message: " << decodedMessage << std::endl;
@@ -52,8 +53,7 @@ public:
 
 void huffmanTree::buildHuffmanTree(vector<node *> &n) {
   // Add nodes to an overridden priority queue
-  for (int i = 0; i < n.size(); i++)
-    pq.push(n.at(i));
+  for (int i = 0; i < n.size(); i++) pq.push(n.at(i));
 
   // Building the Huffman tree
 
@@ -79,19 +79,17 @@ void huffmanTree::buildHuffmanTree(vector<node *> &n) {
 }
 
 void huffmanTree::decode(vector<code *> &c) {
-
   // Find the largest position to find the length of the final string
   int max = 0;
 
   for (int i = 0; i < c.size(); i++)
-    for (int j = 0; j < c.at(i)->pos.size(); j++)
-      if (max < c.at(i)->pos.at(j))
-        max = c.at(i)->pos.at(j);
-
+    for (int j = 0; j < c.at(i)->pos.size(); j++) {
+      if (max < c.at(i)->pos.at(j)) max = c.at(i)->pos.at(j);
+    }
   string result(max + 1, '*');
 
   for (int i = 0; i < c.size(); i++) {
-    string currCode = to_string(c.at(i)->data);
+    string currCode = c.at(i)->data;
     node *cu = root;
 
     for (int j = 0; j < currCode.size(); j++) {
@@ -102,15 +100,15 @@ void huffmanTree::decode(vector<code *> &c) {
 
     // Once you get the char from the decode, set the data at the given position
     // in the result string
-    for (auto position : c.at(i)->pos)
+    for (auto position : c.at(i)->pos) {
       result.at(position) = cu->data.at(0);
+    }
   }
   decodedMessage = result;
 }
 
 node *huffmanTree::printInOrder(node *n, string c) {
-  if (!n)
-    return nullptr;
+  if (!n) return nullptr;
   printInOrder(n->left, c + "0");
   if (n->data != "\0") {
     std::cout << "Symbol: " << n->data << ", Frequency : " << n->freq

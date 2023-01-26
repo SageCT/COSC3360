@@ -46,15 +46,13 @@ int main() {
       stringstream ss(in);
       int i;
 
-      while (ss >> i)
-        temp.push_back(i);
-      code *newCode = new code(stoi(toAdd), temp);
+      while (ss >> i) temp.push_back(i);
+      code *newCode = new code(toAdd, temp);
 
       codes.push_back(newCode);
 
       counter--;
-      if (counter == 0)
-        break;
+      if (counter == 0) break;
     }
   }
 

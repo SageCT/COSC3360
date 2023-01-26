@@ -1,0 +1,14 @@
+Symbol: 0, Frequency: 2, Code: 000
+Symbol: 2, Frequency: 2, Code: 001
+Symbol: I, Frequency: 1, Code: 0100
+Symbol: N, Frequency: 1, Code: 0101
+Symbol: 6, Frequency: 1, Code: 0110
+Symbol: G, Frequency: 1, Code: 0111
+Symbol: R, Frequency: 1, Code: 1000
+Symbol: O, Frequency: 1, Code: 10010
+Symbol: P, Frequency: 1, Code: 10011
+Symbol:  , Frequency: 3, Code: 101
+Symbol: 3, Frequency: 3, Code: 110
+Symbol: C, Frequency: 2, Code: 1110
+Symbol: S, Frequency: 2, Code: 1111
+Original message: COSC 3360 SPRING 2023
