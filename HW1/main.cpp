@@ -23,14 +23,12 @@ int main() {
   // Gets line from inputFile, and checks if the first character is a digit,
   // if not a digit adds to a vector of nodes
   while (getline(inputFile, in)) {
-    if (isalpha(in.at(0))) {
-      string temp = "";
-      temp += in.at(2);
+    string temp = "";
+    temp += in.at(2);
 
-      // Make node and push to vector
-      node *newNode = new node(in.substr(0, 1), stoi(temp));
-      freq.push_back(newNode), counter++;
-    }
+    // Make node and push to vector
+    node *newNode = new node(in.substr(0, 1), stoi(temp));
+    freq.push_back(newNode), counter++;
   }
 
   inputFile.close();
@@ -60,21 +58,11 @@ int main() {
     }
   }
 
-  std::cout << "Letters and their frequencies: " << endl;
-  for (int i = 0; i < freq.size(); i++)
-    std::cout << freq.at(i)->data << " " << freq.at(i)->freq << endl;
+  compressedFile.close();
 
-  std::cout << "Huffman codes and their positions: " << endl;
-  for (int i = 0; i < codes.size(); i++) {
-    std::cout << codes.at(i)->data << " ";
-    for (int j = 0; j < codes.at(i)->pos.size(); j++)
-      std::cout << codes.at(i)->pos.at(j) << " ";
-    std::cout << endl;
-  }
-
+  // Create and print the Huffman Tree
   huffmanTree tree(freq);
-  // tree.decode(codes);
-  // tree.printTree();
-
+  tree.decode(codes);
+  tree.print();
   return 0;
 }
