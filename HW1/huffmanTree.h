@@ -1,8 +1,11 @@
 #ifndef HUFFMANTREE_H
 #define HUFFMANTREE_H
 
+#include <pthread.h>
+
 #include <iostream>
 #include <queue>
+
 
 using namespace std;
 struct node {
@@ -21,11 +24,11 @@ struct code {
   code(string data, vector<int> pos) : data(data), pos(pos) {}
 };
 
-class Compare {
+class huffmanCompare {
  public:
   bool operator()(node *L, node *R) {
     if (L->freq == R->freq) {
-      if (L->data == R->data) return (L < R);
+      if (L->data == R->data) return (L > R);
       return L->data > R->data;
     }
     return L->freq > R->freq;
@@ -34,7 +37,7 @@ class Compare {
 
 class huffmanTree {
  private:
-  priority_queue<node *, vector<node *>, Compare> pq;
+  priority_queue<node *, vector<node *>, huffmanCompare> pq;
   node *root;
   string decodedMessage;
   node *printInOrder(node *, string = "");
@@ -64,6 +67,13 @@ void huffmanTree::buildHuffmanTree(vector<node *> &n) {
     pq.pop();
     node *right = pq.top();
     pq.pop();
+
+    // TESTING QUEUE ORDER
+    if (left->data != "\0")
+      cout << "Symbol: " << left->data << ", Frequency: " << left->freq << endl;
+    if (right->data != "\0")
+      cout << "Symbol: " << right->data << ", Frequency: " << right->freq
+           << endl;
 
     // Create a new node with the sum of the frequencies of the two smaller
     // nodes, this will be the "parent" node
