@@ -6,7 +6,6 @@
 #include <iostream>
 #include <queue>
 
-
 using namespace std;
 struct node {
   string data;
@@ -25,10 +24,11 @@ struct code {
 };
 
 class huffmanCompare {
- public:
+public:
   bool operator()(node *L, node *R) {
     if (L->freq == R->freq) {
-      if (L->data == R->data) return (L > R);
+      if (L->data == R->data)
+        return (L < R);
       return L->data > R->data;
     }
     return L->freq > R->freq;
@@ -36,17 +36,17 @@ class huffmanCompare {
 };
 
 class huffmanTree {
- private:
+private:
   priority_queue<node *, vector<node *>, huffmanCompare> pq;
   node *root;
   string decodedMessage;
   node *printInOrder(node *, string = "");
 
- public:
+public:
   huffmanTree() : root(nullptr) {}
   huffmanTree(vector<node *> &n) : root(nullptr) { buildHuffmanTree(n); };
   void buildHuffmanTree(vector<node *> &);
-  void decode(vector<code *> &);
+  void decode(vector<code *>);
 
   void print() {
     printInOrder(root);
@@ -56,7 +56,8 @@ class huffmanTree {
 
 void huffmanTree::buildHuffmanTree(vector<node *> &n) {
   // Add nodes to an overridden priority queue
-  for (int i = 0; i < n.size(); i++) pq.push(n.at(i));
+  for (int i = 0; i < n.size(); i++)
+    pq.push(n.at(i));
 
   // Building the Huffman tree
 
@@ -67,13 +68,6 @@ void huffmanTree::buildHuffmanTree(vector<node *> &n) {
     pq.pop();
     node *right = pq.top();
     pq.pop();
-
-    // TESTING QUEUE ORDER
-    if (left->data != "\0")
-      cout << "Symbol: " << left->data << ", Frequency: " << left->freq << endl;
-    if (right->data != "\0")
-      cout << "Symbol: " << right->data << ", Frequency: " << right->freq
-           << endl;
 
     // Create a new node with the sum of the frequencies of the two smaller
     // nodes, this will be the "parent" node
@@ -88,13 +82,14 @@ void huffmanTree::buildHuffmanTree(vector<node *> &n) {
   root = pq.top();
 }
 
-void huffmanTree::decode(vector<code *> &c) {
+void huffmanTree::decode(vector<code *> c) {
   // Find the largest position to find the length of the final string
   int max = 0;
 
   for (int i = 0; i < c.size(); i++)
     for (int j = 0; j < c.at(i)->pos.size(); j++) {
-      if (max < c.at(i)->pos.at(j)) max = c.at(i)->pos.at(j);
+      if (max < c.at(i)->pos.at(j))
+        max = c.at(i)->pos.at(j);
     }
   string result(max + 1, '*');
 
@@ -118,7 +113,8 @@ void huffmanTree::decode(vector<code *> &c) {
 }
 
 node *huffmanTree::printInOrder(node *n, string c) {
-  if (!n) return nullptr;
+  if (!n)
+    return nullptr;
   printInOrder(n->left, c + "0");
   if (n->data != "\0") {
     std::cout << "Symbol: " << n->data << ", Frequency : " << n->freq
