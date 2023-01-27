@@ -13,11 +13,12 @@ struct node {
 };
 
 class compare {
- public:
+public:
   bool operator()(string a, string b) { return a > b; }
   bool operator()(node *a, node *b) {
     if (a->priority == b->priority) {
-      if (a->data == b->data) return a > b;
+      if (a->data == b->data)
+        return a > b;
       return a->data > b->data;
     }
     return a->priority > b->priority;
@@ -26,7 +27,7 @@ class compare {
 
 int main() {
   priority_queue<node *, vector<node *>, compare> pq;
-  node *a = new node("A", 1);
+  node *a = new node("", 1);
   node *b = new node("B", 1);
   node *c = new node("C", 2);
   node *d = new node("D", 1);
@@ -42,14 +43,5 @@ int main() {
 
   // cout << ("B" > "B") << endl;
   int count = 0;
-  while (!pq.empty()) {
-    if (pq.top()->data == "\0")
-      cout << "NULL" << endl;
-    else if (pq.top()->data == "D")
-      cout << "D: " << count++ << endl;
-    else
-      cout << pq.top()->data << endl;
-    pq.pop();
-  }
   return 0;
 }

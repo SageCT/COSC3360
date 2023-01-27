@@ -69,6 +69,8 @@ void huffmanTree::buildHuffmanTree(vector<node *> &n) {
     node *right = pq.top();
     pq.pop();
 
+    // TESTING print out left and right
+
     // Create a new node with the sum of the frequencies of the two smaller
     // nodes, this will be the "parent" node
     node *parent = new node("\0", left->freq + right->freq);
@@ -80,7 +82,12 @@ void huffmanTree::buildHuffmanTree(vector<node *> &n) {
   }
   // Set the remaining node as the root
   root = pq.top();
+  pq.pop();
+
+  printInOrder(root);
 }
+
+// HEISENBUG HERE
 
 void huffmanTree::decode(vector<code *> c) {
   // Find the largest position to find the length of the final string
@@ -91,24 +98,32 @@ void huffmanTree::decode(vector<code *> c) {
       if (max < c.at(i)->pos.at(j))
         max = c.at(i)->pos.at(j);
     }
+
+  cout << "Max1: " << max << endl;
   string result(max + 1, '*');
 
   for (int i = 0; i < c.size(); i++) {
+
     string currCode = c.at(i)->data;
     node *cu = root;
+    cout << "Current code: " << currCode << endl;
 
-    for (int j = 0; j < currCode.size(); j++) {
+    for (auto currCode : c.at(i)->data) {
       // If current char is 0, go left
       //  If current char is 1, go right
-      currCode.at(j) == '0' ? cu = cu->left : cu = cu->right;
+      if (currCode == '0')
+        cu = cu->left;
+      else if (currCode == '1')
+        cu = cu->right;
     }
-
+    cout << "Current char: " << cu->data << endl;
     // Once you get the char from the decode, set the data at the given position
     // in the result string
-    for (auto position : c.at(i)->pos) {
+    for (int position : c.at(i)->pos) {
       result.at(position) = cu->data.at(0);
     }
   }
+
   decodedMessage = result;
 }
 

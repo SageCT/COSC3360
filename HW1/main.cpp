@@ -62,7 +62,7 @@ int main() {
 
   // Create and print the Huffman Tree
   huffmanTree tree(freq);
-  tree.decode(codes);
-  tree.print();
+  // tree.decode(codes);
+  // tree.print();
   return 0;
 }
