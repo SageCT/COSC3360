@@ -23,12 +23,97 @@ struct code {
   code(string data, vector<int> pos) : data(data), pos(pos) {}
 };
 
+class huffmanQueue {
+private:
+  vector<node *> pq;
+  void balance();
+  void add(node *n);
+
+public:
+  huffmanQueue() {}
+  huffmanQueue(vector<node *> &n) : pq(n) {}
+  void push(node *n) { add(n); }
+  node *pop() {
+    node *temp = pq[0];
+    pq.erase(pq.begin());
+    return temp;
+  }
+  node *top() { return pq.at(0); }
+  int length() { return pq.size(); }
+};
+
+void huffmanQueue::add(node *n) {
+  for (int i = pq.size(); i > 0; i--) {
+    if (pq[i]->freq == n->freq) {
+      if (pq[i]->data == n->data) {
+        if (pq[i] < n) {
+          pq.insert(pq.begin() + i, n);
+          return;
+        }
+      }
+    } else if (pq[i]->freq < n->freq) {
+      pq[i] = n;
+      return;
+    }
+  }
+}
+
+class priQueue {
+private:
+  int size;
+  vector<node *> pq;
+
+public:
+  priQueue() { size = 0; }
+  ~priQueue() {}
+  void push(node *);
+  node *pop();
+  node *top() const {
+    if (!isEmpty())
+      return pq.at(0);
+    return nullptr;
+  };
+  int getSize() const { return size; }
+  bool isEmpty() const { return size == 0; }
+};
+
+void priQueue::push(node *n) {
+  if (isEmpty()) {
+    pq.push_back(n);
+    size++;
+  } else {
+    int index = size - 1;
+    while (index > -1) {
+      if (index == 0 && pri < pq[index].priority) {
+        pq.insert(pq.begin() + index, toAdd);
+        index--, size++;
+      } else if (pri < pq[index].priority) {
+        index--;
+      } else if (pri >= pq[index].priority) {
+        pq.insert(pq.begin() + index + 1, toAdd);
+        index = -1;
+        size++;
+      }
+    }
+  }
+}
+
+node *priQueue::pop() {
+  if (!isEmpty()) {
+    node *temp = pq[0];
+    pq.erase(pq.begin() + 0);
+    size--;
+    return temp;
+  }
+  return "-1";
+}
+
 class huffmanCompare {
 public:
   bool operator()(node *L, node *R) {
     if (L->freq == R->freq) {
       if (L->data == R->data)
-        return (L < R);
+        return (L > R);
       return L->data > R->data;
     }
     return L->freq > R->freq;
@@ -48,10 +133,7 @@ public:
   void buildHuffmanTree(vector<node *> &);
   void decode(vector<code *>);
 
-  void print() {
-    printInOrder(root);
-    std::cout << "Original message: " << decodedMessage << std::endl;
-  };
+  void print();
 };
 
 void huffmanTree::buildHuffmanTree(vector<node *> &n) {
@@ -99,7 +181,7 @@ void huffmanTree::decode(vector<code *> c) {
         max = c.at(i)->pos.at(j);
     }
 
-  cout << "Max1: " << max << endl;
+  cout << "Max: " << max << endl;
   string result(max + 1, '*');
 
   for (int i = 0; i < c.size(); i++) {
@@ -125,6 +207,11 @@ void huffmanTree::decode(vector<code *> c) {
   }
 
   decodedMessage = result;
+}
+
+void huffmanTree::print() {
+  // printInOrder(root);
+  // cout << "Original message: " << decodedMessage << endl;
 }
 
 node *huffmanTree::printInOrder(node *n, string c) {

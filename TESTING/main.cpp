@@ -1,3 +1,4 @@
+#include <fstream>
 #include <iostream>
 #include <queue>
 #include <string>
@@ -7,41 +8,40 @@ using namespace std;
 
 struct node {
   string data;
-  int priority;
-  node() : data(""), priority(0) {}
-  node(string data, int priority) : data(data), priority(priority) {}
+  int freq;
+  node *left;
+  node *right;
+  node() : data(""), freq(0), left(nullptr), right(nullptr) {}
+  node(string data, int freq)
+      : data(data), freq(freq), left(nullptr), right(nullptr) {}
 };
 
 class compare {
 public:
   bool operator()(string a, string b) { return a > b; }
-  bool operator()(node *a, node *b) {
-    if (a->priority == b->priority) {
-      if (a->data == b->data)
-        return a > b;
-      return a->data > b->data;
+  bool operator()(node *L, node *R) {
+    if (L->freq == R->freq) {
+      if (L->data == R->data)
+        return (L > R);
+      return L->data > R->data;
     }
-    return a->priority > b->priority;
+    return L->freq > R->freq;
   }
 };
 
 int main() {
+  ifstream file("../HW1/input2.txt");
   priority_queue<node *, vector<node *>, compare> pq;
-  node *a = new node("", 1);
-  node *b = new node("B", 1);
-  node *c = new node("C", 2);
-  node *d = new node("D", 1);
-  node *nul = new node("\0", 1);
-  node *d2 = new node("D", 1);
 
-  pq.push(a);
-  pq.push(b);
-  pq.push(c);
-  pq.push(d);
-  pq.push(nul);
-  pq.push(d2);
+  for (string line; getline(file, line);)
+    pq.push(new node(line.substr(0, 1), stoi(line.substr(2, 1))));
 
+  file.close();
   // cout << ("B" > "B") << endl;
-  int count = 0;
+
+  while (!pq.empty()) {
+    cout << pq.top()->data << " " << pq.top()->freq << endl;
+    pq.pop();
+  }
   return 0;
 }
