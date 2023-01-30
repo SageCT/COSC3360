@@ -35,10 +35,10 @@ struct code {
 
 class huffmanCompare {
 public:
-  bool operator()(shared_ptr<node> L, shared_ptr<node> R) {
+  bool operator()(shared_ptr<node> &L, shared_ptr<node> &R) {
     if (L->freq == R->freq) {
       if (L->data == R->data)
-        return (L.get() < R.get());
+        return (L < R);
       return L->data > R->data;
     }
     return L->freq > R->freq;
@@ -120,10 +120,11 @@ void huffmanTree::decode(vector<shared_ptr<code>> &c) {
       currCode.at(j) == '0' ? cu = cu->left : cu = cu->right;
     }
 
-    // Once you get the char from the decode, set the data at the given position
-    // in the result string
+    // // Once you get the char from the decode, set the data at the given
+    // position
+    // // in the result string
     for (auto position : c.at(i)->pos) {
-      result.at(position) = cu->data.at(0);
+      result[position] = cu->data[0];
     }
   }
   decodedMessage = result;
