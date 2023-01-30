@@ -42,6 +42,7 @@ public:
 int main() {
   ifstream file("../HW1/input2.txt");
   priority_queue<shared_ptr<node>, vector<shared_ptr<node>>, compare> pq;
+  vector<shared_ptr<node>> nodes;
 
   for (string line; getline(file, line);)
     pq.push(
