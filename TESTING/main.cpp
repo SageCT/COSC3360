@@ -1,5 +1,6 @@
 #include <fstream>
 #include <iostream>
+#include <memory>
 #include <queue>
 #include <string>
 #include <vector>
@@ -38,6 +39,12 @@ int main() {
 
   file.close();
   // cout << ("B" > "B") << endl;
+
+  vector<shared_ptr<node>> n;
+  while (!pq.empty()) {
+    n.push_back(make_shared<node>(pq.top()->data, pq.top()->freq));
+    pq.pop();
+  }
 
   while (!pq.empty()) {
     cout << pq.top()->data << " " << pq.top()->freq << endl;
