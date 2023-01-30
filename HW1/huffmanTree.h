@@ -23,90 +23,90 @@ struct code {
   code(string data, vector<int> pos) : data(data), pos(pos) {}
 };
 
-class huffmanQueue {
-private:
-  vector<node *> pq;
-  void balance();
-  void add(node *n);
+// class huffmanQueue {
+// private:
+//   vector<node *> pq;
+//   void balance();
+//   void add(node *n);
 
-public:
-  huffmanQueue() {}
-  huffmanQueue(vector<node *> &n) : pq(n) {}
-  void push(node *n) { add(n); }
-  node *pop() {
-    node *temp = pq[0];
-    pq.erase(pq.begin());
-    return temp;
-  }
-  node *top() { return pq.at(0); }
-  int length() { return pq.size(); }
-};
+// public:
+//   huffmanQueue() {}
+//   huffmanQueue(vector<node *> &n) : pq(n) {}
+//   void push(node *n) { add(n); }
+//   node *pop() {
+//     node *temp = pq[0];
+//     pq.erase(pq.begin());
+//     return temp;
+//   }
+//   node *top() { return pq.at(0); }
+//   int length() { return pq.size(); }
+// };
 
-void huffmanQueue::add(node *n) {
-  for (int i = pq.size(); i > 0; i--) {
-    if (pq[i]->freq == n->freq) {
-      if (pq[i]->data == n->data) {
-        if (pq[i] < n) {
-          pq.insert(pq.begin() + i, n);
-          return;
-        }
-      }
-    } else if (pq[i]->freq < n->freq) {
-      pq[i] = n;
-      return;
-    }
-  }
-}
+// void huffmanQueue::add(node *n) {
+//   for (int i = pq.size(); i > 0; i--) {
+//     if (pq[i]->freq == n->freq) {
+//       if (pq[i]->data == n->data) {
+//         if (pq[i] < n) {
+//           pq.insert(pq.begin() + i, n);
+//           return;
+//         }
+//       }
+//     } else if (pq[i]->freq < n->freq) {
+//       pq[i] = n;
+//       return;
+//     }
+//   }
+// }
 
-class priQueue {
-private:
-  int size;
-  vector<node *> pq;
+// class priQueue {
+// private:
+//   int size;
+//   vector<node *> pq;
 
-public:
-  priQueue() { size = 0; }
-  ~priQueue() {}
-  void push(node *);
-  node *pop();
-  node *top() const {
-    if (!isEmpty())
-      return pq.at(0);
-    return nullptr;
-  };
-  int getSize() const { return size; }
-  bool isEmpty() const { return size == 0; }
-};
+// public:
+//   priQueue() { size = 0; }
+//   ~priQueue() {}
+//   void push(node *);
+//   node *pop();
+//   node *top() const {
+//     if (!isEmpty())
+//       return pq.at(0);
+//     return nullptr;
+//   };
+//   int getSize() const { return size; }
+//   bool isEmpty() const { return size == 0; }
+// };
 
-void priQueue::push(node *n) {
-  if (isEmpty()) {
-    pq.push_back(n);
-    size++;
-  } else {
-    int index = size - 1;
-    while (index > -1) {
-      if (index == 0 && pri < pq[index].priority) {
-        pq.insert(pq.begin() + index, toAdd);
-        index--, size++;
-      } else if (pri < pq[index].priority) {
-        index--;
-      } else if (pri >= pq[index].priority) {
-        pq.insert(pq.begin() + index + 1, toAdd);
-        index = -1;
-        size++;
-      }
-    }
-  }
-}
+// void priQueue::push(node *n) {
+//   if (isEmpty()) {
+//     pq.push_back(n);
+//     size++;
+//   } else {
+//     int index = size - 1;
+//     while (index > -1) {
+//       if (index == 0 && n->freq < pq[index]->freq) {
+//         pq.insert(pq.begin() + index, toAdd);
+//         index--, size++;
+//       } else if (pri < pq[index].priority) {
+//         index--;
+//       } else if (pri >= pq[index].priority) {
+//         pq.insert(pq.begin() + index + 1, toAdd);
+//         index = -1;
+//         size++;
+//       }
+//     }
+//   }
+// }
 
-node *priQueue::pop() {
-  if (!isEmpty()) {
-    node *temp = pq[0];
-    pq.erase(pq.begin() + 0);
-    size--;
-    return temp;
-  }
-  return "-1";
-}
+// node *priQueue::pop() {
+//   if (!isEmpty()) {
+//     node *temp = pq[0];
+//     pq.erase(pq.begin() + 0);
+//     size--;
+//     return temp;
+//   }
+//   return "-1";
+// }
 
 class huffmanCompare {
 public:
@@ -190,15 +190,15 @@ void huffmanTree::decode(vector<code *> c) {
     node *cu = root;
     cout << "Current code: " << currCode << endl;
 
-    for (auto currCode : c.at(i)->data) {
+    for (auto curr : currCode) {
       // If current char is 0, go left
       //  If current char is 1, go right
-      if (currCode == '0')
+      if (curr == '0' && cu->left)
         cu = cu->left;
-      else if (currCode == '1')
+      else if (curr == '1' && cu->right)
         cu = cu->right;
     }
-    cout << "Current char: " << cu->data << endl;
+
     // Once you get the char from the decode, set the data at the given position
     // in the result string
     for (int position : c.at(i)->pos) {

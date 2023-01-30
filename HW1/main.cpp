@@ -30,6 +30,7 @@ int main() {
     node *newNode = new node(in.substr(0, 1), stoi(temp));
     freq.push_back(newNode), counter++;
   }
+  sort(freq.begin(), freq.end(), huffmanCompare());
 
   inputFile.close();
 
@@ -62,7 +63,7 @@ int main() {
 
   // Create and print the Huffman Tree
   huffmanTree tree(freq);
-  // tree.decode(codes);
+  tree.decode(codes);
   // tree.print();
   return 0;
 }

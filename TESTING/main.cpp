@@ -3,6 +3,7 @@
 #include <queue>
 #include <string>
 #include <vector>
+#include <algorithm>
 
 using namespace std;
 
@@ -32,12 +33,19 @@ public:
 int main() {
   ifstream file("../HW1/input2.txt");
   priority_queue<node *, vector<node *>, compare> pq;
+  vector<node *> nodes;
 
   for (string line; getline(file, line);)
-    pq.push(new node(line.substr(0, 1), stoi(line.substr(2, 1))));
+    nodes.push_back(new node(line.substr(0, 1), stoi(line.substr(2, 1))));
 
+  std::sort(nodes.begin(), nodes.end(), compare());
   file.close();
   // cout << ("B" > "B") << endl;
+
+  while (!nodes.empty()) {
+    pq.push(nodes[0]);
+    nodes.erase(nodes.begin());
+  }
 
   while (!pq.empty()) {
     cout << pq.top()->data << " " << pq.top()->freq << endl;
