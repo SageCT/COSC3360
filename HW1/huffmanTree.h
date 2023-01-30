@@ -3,18 +3,28 @@
 
 #include <pthread.h>
 
+#include <algorithm>
+#include <fstream>
 #include <iostream>
+#include <memory>
 #include <queue>
+#include <sstream>
+#include <string>
+#include <vector>
 
 using namespace std;
 struct node {
   string data;
   int freq;
-  node *left;
-  node *right;
+  shared_ptr<node> left, right;
+
   node() : data(""), freq(0), left(nullptr), right(nullptr) {}
   node(string data, int freq)
       : data(data), freq(freq), left(nullptr), right(nullptr) {}
+  node(string data, int freq, shared_ptr<node> left, shared_ptr<node> right)
+      : data(data), freq(freq), left(left), right(right) {}
+  node(shared_ptr<node> n)
+      : data(n->data), freq(n->freq), left(n->left), right(n->right) {}
 };
 
 struct code {
@@ -23,97 +33,97 @@ struct code {
   code(string data, vector<int> pos) : data(data), pos(pos) {}
 };
 
-// class huffmanQueue {
-// private:
-//   vector<node *> pq;
-//   void balance();
-//   void add(node *n);
+class huffmanQueue {
+private:
+  vector<node *> pq;
+  void balance();
+  void add(node *n);
 
-// public:
-//   huffmanQueue() {}
-//   huffmanQueue(vector<node *> &n) : pq(n) {}
-//   void push(node *n) { add(n); }
-//   node *pop() {
-//     node *temp = pq[0];
-//     pq.erase(pq.begin());
-//     return temp;
-//   }
-//   node *top() { return pq.at(0); }
-//   int length() { return pq.size(); }
-// };
+public:
+  huffmanQueue() {}
+  huffmanQueue(vector<node *> &n) : pq(n) {}
+  void push(node *n) { add(n); }
+  node *pop() {
+    node *temp = pq[0];
+    pq.erase(pq.begin());
+    return temp;
+  }
+  node *top() { return pq.at(0); }
+  int length() { return pq.size(); }
+};
 
-// void huffmanQueue::add(node *n) {
-//   for (int i = pq.size(); i > 0; i--) {
-//     if (pq[i]->freq == n->freq) {
-//       if (pq[i]->data == n->data) {
-//         if (pq[i] < n) {
-//           pq.insert(pq.begin() + i, n);
-//           return;
-//         }
-//       }
-//     } else if (pq[i]->freq < n->freq) {
-//       pq[i] = n;
-//       return;
-//     }
-//   }
-// }
+void huffmanQueue::add(node *n) {
+  for (int i = pq.size(); i > 0; i--) {
+    if (pq[i]->freq == n->freq) {
+      if (pq[i]->data == n->data) {
+        if (pq[i] < n) {
+          pq.insert(pq.begin() + i, n);
+          return;
+        }
+      }
+    } else if (pq[i]->freq < n->freq) {
+      pq[i] = n;
+      return;
+    }
+  }
+}
 
-// class priQueue {
-// private:
-//   int size;
-//   vector<node *> pq;
+class priQueue {
+private:
+  int size;
+  vector<node *> pq;
 
-// public:
-//   priQueue() { size = 0; }
-//   ~priQueue() {}
-//   void push(node *);
-//   node *pop();
-//   node *top() const {
-//     if (!isEmpty())
-//       return pq.at(0);
-//     return nullptr;
-//   };
-//   int getSize() const { return size; }
-//   bool isEmpty() const { return size == 0; }
-// };
+public:
+  priQueue() { size = 0; }
+  ~priQueue() {}
+  void push(node *);
+  node *pop();
+  node *top() const {
+    if (!isEmpty())
+      return pq.at(0);
+    return nullptr;
+  };
+  int getSize() const { return size; }
+  bool isEmpty() const { return size == 0; }
+};
 
-// void priQueue::push(node *n) {
-//   if (isEmpty()) {
-//     pq.push_back(n);
-//     size++;
-//   } else {
-//     int index = size - 1;
-//     while (index > -1) {
-//       if (index == 0 && n->freq < pq[index]->freq) {
-//         pq.insert(pq.begin() + index, toAdd);
-//         index--, size++;
-//       } else if (pri < pq[index].priority) {
-//         index--;
-//       } else if (pri >= pq[index].priority) {
-//         pq.insert(pq.begin() + index + 1, toAdd);
-//         index = -1;
-//         size++;
-//       }
-//     }
-//   }
-// }
+void priQueue::push(node *n) {
+  if (isEmpty()) {
+    pq.push_back(n);
+    size++;
+  } else {
+    int index = size - 1;
+    while (index > -1) {
+      if (index == 0 && pri < pq[index].priority) {
+        pq.insert(pq.begin() + index, toAdd);
+        index--, size++;
+      } else if (pri < pq[index].priority) {
+        index--;
+      } else if (pri >= pq[index].priority) {
+        pq.insert(pq.begin() + index + 1, toAdd);
+        index = -1;
+        size++;
+      }
+    }
+  }
+}
 
-// node *priQueue::pop() {
-//   if (!isEmpty()) {
-//     node *temp = pq[0];
-//     pq.erase(pq.begin() + 0);
-//     size--;
-//     return temp;
-//   }
-//   return "-1";
-// }
+node *priQueue::pop() {
+  if (!isEmpty()) {
+    node *temp = pq[0];
+    pq.erase(pq.begin() + 0);
+    size--;
+    return temp;
+  }
+  return "-1";
+}
 
 class huffmanCompare {
 public:
-  bool operator()(node *L, node *R) {
+  bool operator()(shared_ptr<node> &L, shared_ptr<node> &R) {
     if (L->freq == R->freq) {
       if (L->data == R->data)
-        return (L > R);
+        return (L < R);
       return L->data > R->data;
     }
     return L->freq > R->freq;
@@ -122,56 +132,59 @@ public:
 
 class huffmanTree {
 private:
-  priority_queue<node *, vector<node *>, huffmanCompare> pq;
-  node *root;
+  priority_queue<shared_ptr<node>, vector<shared_ptr<node>>, huffmanCompare> pq;
+  vector<shared_ptr<node>> nodes;
+  shared_ptr<node> root;
   string decodedMessage;
-  node *printInOrder(node *, string = "");
+
+  shared_ptr<node> printInOrder(shared_ptr<node> &, string = "");
 
 public:
   huffmanTree() : root(nullptr) {}
-  huffmanTree(vector<node *> &n) : root(nullptr) { buildHuffmanTree(n); };
-  void buildHuffmanTree(vector<node *> &);
-  void decode(vector<code *>);
+  huffmanTree(vector<shared_ptr<node>> &n) : nodes(n), root(nullptr) {
+    buildHuffmanTree(n);
+  };
+  void buildHuffmanTree(vector<shared_ptr<node>> &);
+  void decode(vector<shared_ptr<code>> &);
 
-  void print();
+  void print() {
+    printInOrder(root);
+    std::cout << "Original message: " << decodedMessage << std::endl;
+  };
 };
 
-void huffmanTree::buildHuffmanTree(vector<node *> &n) {
+void huffmanTree::buildHuffmanTree(vector<shared_ptr<node>> &n) {
+  // Make sure that the vector is the correct one passed
+  if (nodes != n)
+    nodes = n;
+
   // Add nodes to an overridden priority queue
   for (int i = 0; i < n.size(); i++)
-    pq.push(n.at(i));
+    pq.push(nodes.at(i));
 
   // Building the Huffman tree
 
   // While there is more than one node in the priority queue
   while (pq.size() > 1) {
     // Set left and right nodes as the smallest in the pq (the first two nodes)
-    node *left = pq.top();
+    shared_ptr<node> left(pq.top());
     pq.pop();
-    node *right = pq.top();
+    shared_ptr<node> right(pq.top());
     pq.pop();
-
-    // TESTING print out left and right
 
     // Create a new node with the sum of the frequencies of the two smaller
     // nodes, this will be the "parent" node
-    node *parent = new node("\0", left->freq + right->freq);
-    parent->left = left;
-    parent->right = right;
+    shared_ptr<node> parent(
+        make_shared<node>(node("\0", left->freq + right->freq, left, right)));
+
     // Because the nodes will always be sorted in the priority queue, we can
     // just add the parent back the the queue
     pq.push(parent);
+    root = parent;
   }
-  // Set the remaining node as the root
-  root = pq.top();
-  pq.pop();
-
-  printInOrder(root);
 }
 
-// HEISENBUG HERE
-
-void huffmanTree::decode(vector<code *> c) {
+void huffmanTree::decode(vector<shared_ptr<code>> &c) {
   // Find the largest position to find the length of the final string
   int max = 0;
 
@@ -180,23 +193,16 @@ void huffmanTree::decode(vector<code *> c) {
       if (max < c.at(i)->pos.at(j))
         max = c.at(i)->pos.at(j);
     }
-
-  cout << "Max: " << max << endl;
   string result(max + 1, '*');
 
   for (int i = 0; i < c.size(); i++) {
-
     string currCode = c.at(i)->data;
-    node *cu = root;
-    cout << "Current code: " << currCode << endl;
+    shared_ptr<node> cu(make_shared<node>(root));
 
     for (auto curr : currCode) {
       // If current char is 0, go left
       //  If current char is 1, go right
-      if (curr == '0' && cu->left)
-        cu = cu->left;
-      else if (curr == '1' && cu->right)
-        cu = cu->right;
+      currCode.at(j) == '0' ? cu = cu->left : cu = cu->right;
     }
 
     // Once you get the char from the decode, set the data at the given position
@@ -205,16 +211,10 @@ void huffmanTree::decode(vector<code *> c) {
       result.at(position) = cu->data.at(0);
     }
   }
-
   decodedMessage = result;
 }
 
-void huffmanTree::print() {
-  // printInOrder(root);
-  // cout << "Original message: " << decodedMessage << endl;
-}
-
-node *huffmanTree::printInOrder(node *n, string c) {
+shared_ptr<node> huffmanTree::printInOrder(shared_ptr<node> &n, string c) {
   if (!n)
     return nullptr;
   printInOrder(n->left, c + "0");

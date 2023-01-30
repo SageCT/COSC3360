@@ -1,9 +1,10 @@
+#include <algorithm>
 #include <fstream>
 #include <iostream>
+#include <memory>
 #include <queue>
 #include <string>
 #include <vector>
-#include <algorithm>
 
 using namespace std;
 
@@ -28,24 +29,40 @@ public:
     }
     return L->freq > R->freq;
   }
+  bool operator()(shared_ptr<node> L, shared_ptr<node> R) {
+    if (L->freq == R->freq) {
+      if (L->data == R->data)
+        return (L.get() < R.get());
+      return L->data > R->data;
+    }
+    return L->freq > R->freq;
+  }
 };
 
 int main() {
   ifstream file("../HW1/input2.txt");
-  priority_queue<node *, vector<node *>, compare> pq;
-  vector<node *> nodes;
+  priority_queue<shared_ptr<node>, vector<shared_ptr<node>>, compare> pq;
 
   for (string line; getline(file, line);)
-    nodes.push_back(new node(line.substr(0, 1), stoi(line.substr(2, 1))));
+    pq.push(
+        make_shared<node>(node(line.substr(0, 1), stoi(line.substr(2, 1)))));
 
   std::sort(nodes.begin(), nodes.end(), compare());
   file.close();
   // cout << ("B" > "B") << endl;
 
-  while (!nodes.empty()) {
-    pq.push(nodes[0]);
-    nodes.erase(nodes.begin());
-  }
+  vector<shared_ptr<node>> n;
+  // while (!pq.empty()) {
+  //   n.push_back(make_shared<node>(pq.top()->data, pq.top()->freq));
+  //   pq.pop();
+  // }
+
+  n.push_back(make_shared<node>("Second", 2));
+  n.push_back(make_shared<node>("Third", 3));
+  n.push_back(make_shared<node>("First", 1));
+
+  //  while (auto i : n)
+  //   cout << i->data << " " << i->freq << endl;
 
   while (!pq.empty()) {
     cout << pq.top()->data << " " << pq.top()->freq << endl;

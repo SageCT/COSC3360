@@ -1,9 +1,3 @@
-#include <algorithm>
-#include <fstream>
-#include <iostream>
-#include <sstream>
-#include <string>
-
 #include "huffmanTree.h"
 
 using namespace std;
@@ -12,12 +6,18 @@ int main() {
   string in, toAdd;
   int counter = 0;
   // struct with the codes and their positions in a vector of ints
-  vector<code *> codes;
+  vector<shared_ptr<code>> codes;
   // vector with the characters and their frequencies
-  vector<node *> freq;
+  vector<shared_ptr<node>> freq;
 
   string inputFileName, compressedFileName;
-  cin >> inputFileName >> compressedFileName;
+  // cin >> inputFileName >> compressedFileName;
+
+  // DEBUGGING
+  inputFileName = "input2.txt";
+  compressedFileName = "comp2.txt";
+  // DEBUGGING
+
   ifstream inputFile(inputFileName), compressedFile(compressedFileName);
 
   // Gets line from inputFile, and checks if the first character is a digit,
@@ -27,11 +27,12 @@ int main() {
     temp += in.at(2);
 
     // Make node and push to vector
-    node *newNode = new node(in.substr(0, 1), stoi(temp));
+    shared_ptr<node> newNode(
+        make_shared<node>(node(in.substr(0, 1), stoi(temp))));
     freq.push_back(newNode), counter++;
   }
   sort(freq.begin(), freq.end(), huffmanCompare());
-
+  reverse(freq.begin(), freq.end());
   inputFile.close();
 
   while (getline(compressedFile, in)) {
@@ -49,8 +50,7 @@ int main() {
 
       while (ss >> i)
         temp.push_back(i);
-      code *newCode = new code(toAdd, temp);
-
+      shared_ptr<code> newCode(make_shared<code>(code(toAdd, temp)));
       codes.push_back(newCode);
 
       counter--;
@@ -64,6 +64,6 @@ int main() {
   // Create and print the Huffman Tree
   huffmanTree tree(freq);
   tree.decode(codes);
-  // tree.print();
+  tree.print();
   return 0;
 }
