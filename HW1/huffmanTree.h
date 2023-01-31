@@ -111,6 +111,8 @@ void huffmanTree::decode(vector<shared_ptr<code>> &c) {
     }
   string result(max + 1, '*');
 
+  pthread_t threads;
+
   for (int i = 0; i < c.size(); i++) {
     string currCode = c.at(i)->data;
     shared_ptr<node> cu(make_shared<node>(root));

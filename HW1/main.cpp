@@ -11,12 +11,7 @@ int main() {
   vector<shared_ptr<node>> freq;
 
   string inputFileName, compressedFileName;
-  // cin >> inputFileName >> compressedFileName;
-
-  // DEBUGGING
-  inputFileName = "input2.txt";
-  compressedFileName = "comp2.txt";
-  // DEBUGGING
+  cin >> inputFileName >> compressedFileName;
 
   ifstream inputFile(inputFileName), compressedFile(compressedFileName);
 
@@ -33,6 +28,7 @@ int main() {
   }
   sort(freq.begin(), freq.end(), huffmanCompare());
   reverse(freq.begin(), freq.end());
+
   inputFile.close();
 
   while (getline(compressedFile, in)) {
