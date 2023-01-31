@@ -37,8 +37,9 @@ class huffmanCompare {
 public:
   bool operator()(shared_ptr<node> &L, shared_ptr<node> &R) {
     if (L->freq == R->freq) {
-      if (L->data == R->data)
+      if (L->data == R->data) {
         return (L < R);
+      }
       return L->data > R->data;
     }
     return L->freq > R->freq;
