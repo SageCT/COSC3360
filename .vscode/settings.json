@@ -50,5 +50,6 @@
     "stdexcept": "cpp",
     "streambuf": "cpp",
     "typeinfo": "cpp"
-  }
+  },
+  "cmake.sourceDirectory": "/mnt/c/Users/hgt65/repos/COSC3360/HW1"
 }
