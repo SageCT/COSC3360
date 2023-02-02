@@ -8,7 +8,6 @@
 #include <iostream>
 #include <memory>
 #include <queue>
-#include <sstream>
 #include <string>
 #include <vector>
 
@@ -31,6 +30,14 @@ struct code {
   string data;
   vector<int> pos;
   code(string data, vector<int> pos) : data(data), pos(pos) {}
+};
+
+struct threadData {
+  int numChars;
+  shared_ptr<node> root;
+  shared_ptr<code> codeVal;
+  threadData(shared_ptr<node> r, shared_ptr<code> c, int nC)
+      : root(r), codeVal(c), numChars(nC) {}
 };
 
 class huffmanCompare {
@@ -61,8 +68,8 @@ public:
     buildHuffmanTree(n);
   };
   void buildHuffmanTree(vector<shared_ptr<node>> &);
-  void decode(vector<shared_ptr<code>> &);
-
+  shared_ptr<node> getRoot() const { return root; };
+  void decode(vector<shared_ptr<code>> &, bool threaded = false);
   void print() {
     printInOrder(root);
     std::cout << "Original message: " << decodedMessage << std::endl;
@@ -100,36 +107,66 @@ void huffmanTree::buildHuffmanTree(vector<shared_ptr<node>> &n) {
   }
 }
 
-void huffmanTree::decode(vector<shared_ptr<code>> &c) {
-  // Find the largest position to find the length of the final string
-  int max = 0;
+void huffmanTree::decode(vector<shared_ptr<code>> &c, bool threaded) {
+  if (threaded) {
+    int max = 0;
 
-  for (int i = 0; i < c.size(); i++)
-    for (int j = 0; j < c.at(i)->pos.size(); j++) {
-      if (max < c.at(i)->pos.at(j))
-        max = c.at(i)->pos.at(j);
-    }
-  string result(max + 1, '*');
+    for (int i = 0; i < c.size(); i++)
+      for (int j = 0; j < c.at(i)->pos.size(); j++)
+        if (max < c.at(i)->pos.at(j))
+          max = c.at(i)->pos.at(j);
 
-  pthread_t threads;
+    string result(max + 1, '*');
+    string temp;
 
-  for (int i = 0; i < c.size(); i++) {
-    string currCode = c.at(i)->data;
-    shared_ptr<node> cu(make_shared<node>(root));
-
-    for (auto curr : currCode) {
-      // If current char is 0, go left
-      //  If current char is 1, go right
-      curr == '0' ? cu = cu->left : cu = cu->right;
+    vector<pthread_t> threads;
+    for (auto i : c) {
+      threadData *arg = new threadData(root, i, max + 1);
+      pthread_t thread;
+      pthread_create(&thread, nullptr, (void *(*)(void *))decodethread,
+                     (void *)arg);
+      threads.push_back(thread);
     }
 
-    // Once you get the char from the decode, set the data at the given position
-    // in the result string
-    for (int position : c.at(i)->pos) {
-      result.at(position) = cu->data.at(0);
+    for (auto i : threads) {
+      pthread_join(i, (void **)&temp);
+      for (auto j : temp) {
+        if (j != '*') {
+        }
+      }
     }
+
   }
-  decodedMessage = result;
+
+  else {
+    // Find the largest position to find the length of the final string
+    int max = 0;
+
+    for (int i = 0; i < c.size(); i++)
+      for (int j = 0; j < c.at(i)->pos.size(); j++) {
+        if (max < c.at(i)->pos.at(j))
+          max = c.at(i)->pos.at(j);
+      }
+    string result(max + 1, '*');
+
+    for (int i = 0; i < c.size(); i++) {
+      string currCode = c.at(i)->data;
+      shared_ptr<node> cu(make_shared<node>(root));
+
+      for (auto curr : currCode) {
+        // If current char is 0, go left
+        // If current char is 1, go right
+        curr == '0' ? cu = cu->left : cu = cu->right;
+      }
+
+      // Once you get the char from the decode, set the data at the given
+      // position in the result string
+      for (int position : c.at(i)->pos) {
+        result.at(position) = cu->data.at(0);
+      }
+    }
+    decodedMessage = result;
+  }
 }
 
 shared_ptr<node> huffmanTree::printInOrder(shared_ptr<node> &n, string c) {
