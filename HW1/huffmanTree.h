@@ -107,6 +107,30 @@ void huffmanTree::buildHuffmanTree(vector<shared_ptr<node>> &n) {
   }
 }
 
+string *decodethread(void *ptr) {
+  // Change the void pointer to a shared_ptr<code> pointer
+  threadData *c = (threadData *)ptr;
+  string *result = new string(c->numChars, '*');
+
+  for (int i = 0; i < c->codeVal->pos.size(); i++) {
+
+    shared_ptr<node> cu(c->root);
+    string currCode = c->codeVal->data;
+
+    for (char curr : currCode) {
+      // If current char is 0, go left
+      // If current char is 1, go right
+      curr == '0' ? cu = cu->left : cu = cu->right;
+    }
+    // Once you get the char from the decode, set the data at the given position
+    // in the result string
+    for (int position : c->codeVal->pos) {
+      result->at(position) = cu->data.at(0);
+    }
+  }
+  return result;
+}
+
 void huffmanTree::decode(vector<shared_ptr<code>> &c, bool threaded) {
   if (threaded) {
     int max = 0;
@@ -130,12 +154,11 @@ void huffmanTree::decode(vector<shared_ptr<code>> &c, bool threaded) {
 
     for (auto i : threads) {
       pthread_join(i, (void **)&temp);
-      for (auto j : temp) {
-        if (j != '*') {
-        }
-      }
+      for (int j = 0; j < temp.size(); j++)
+        if (temp.at(j) != '*')
+          result.at(j) = temp.at(j);
     }
-
+    decodedMessage = result;
   }
 
   else {

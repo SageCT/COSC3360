@@ -13,7 +13,10 @@ int main() {
   vector<shared_ptr<node>> freq;
 
   string inputFileName, compressedFileName;
-  cin >> inputFileName >> compressedFileName;
+  // cin >> inputFileName >> compressedFileName;
+
+  inputFileName = "input2.txt";
+  compressedFileName = "comp2.txt";
 
   ifstream inputFile(inputFileName), compressedFile(compressedFileName);
 
@@ -64,28 +67,4 @@ int main() {
   tree.decode(codes, true);
   tree.print();
   return 0;
-}
-
-string *decodethread(void *ptr) {
-  // Change the void pointer to a shared_ptr<code> pointer
-  threadData *c = (threadData *)ptr;
-  string result(c->numChars, '*');
-
-  for (int i = 0; i < c->codeVal->pos.size(); i++) {
-
-    shared_ptr<node> cu(c->root);
-    string currCode = c->codeVal->data;
-
-    for (char curr : currCode) {
-      // If current char is 0, go left
-      // If current char is 1, go right
-      curr == '0' ? cu = cu->left : cu = cu->right;
-    }
-    // Once you get the char from the decode, set the data at the given position
-    // in the result string
-    for (int position : c->codeVal->pos) {
-      result.at(position) = cu->data.at(0);
-    }
-  }
-  return &result;
 }
