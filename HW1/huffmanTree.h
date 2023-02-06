@@ -36,8 +36,9 @@ struct threadData {
   int numChars;
   shared_ptr<node> root;
   shared_ptr<code> codeVal;
-  threadData(shared_ptr<node> r, shared_ptr<code> c, int nC)
-      : root(r), codeVal(c), numChars(nC) {}
+  shared_ptr<vector<char>> decMessage;
+  threadData(shared_ptr<node> r, shared_ptr<code> c, int nC, shared_ptr<vector<char>> dC)
+      : root(r), codeVal(c), numChars(nC), decMessage(dC) {}
 };
 
 class huffmanCompare {
@@ -107,10 +108,9 @@ void huffmanTree::buildHuffmanTree(vector<shared_ptr<node>> &n) {
   }
 }
 
-string *decodethread(void *ptr) {
+void *decodethread(void *ptr) {
   // Change the void pointer to a shared_ptr<code> pointer
   threadData *c = (threadData *)ptr;
-  string *result = new string(c->numChars, '*');
 
   for (int i = 0; i < c->codeVal->pos.size(); i++) {
 
@@ -125,10 +125,10 @@ string *decodethread(void *ptr) {
     // Once you get the char from the decode, set the data at the given position
     // in the result string
     for (int position : c->codeVal->pos) {
-      result->at(position) = cu->data.at(0);
+      c->decMessage->at(position) = cu->data.at(0);
     }
   }
-  return result;
+  return nullptr;
 }
 
 void huffmanTree::decode(vector<shared_ptr<code>> &c, bool threaded) {
@@ -140,24 +140,22 @@ void huffmanTree::decode(vector<shared_ptr<code>> &c, bool threaded) {
         if (max < c.at(i)->pos.at(j))
           max = c.at(i)->pos.at(j);
 
-    string result(max + 1, '*');
-    string temp;
-
+    string result = "";
     vector<pthread_t> threads;
+    shared_ptr<vector<char>> message(make_shared<vector<char>>(vector<char>(max +1)));
+
     for (auto i : c) {
-      threadData *arg = new threadData(root, i, max + 1);
+      threadData *arg = new threadData(root, i, max + 1, message);
       pthread_t thread;
-      pthread_create(&thread, nullptr, (void *(*)(void *))decodethread,
-                     (void *)arg);
+      pthread_create(&thread, nullptr, decodethread, arg);
       threads.push_back(thread);
     }
 
-    for (auto i : threads) {
-      pthread_join(i, (void **)&temp);
-      for (int j = 0; j < temp.size(); j++)
-        if (temp.at(j) != '*')
-          result.at(j) = temp.at(j);
-    }
+    for (auto &i : threads)
+      pthread_join(i, nullptr);
+    for (int i = 0; i < message->size(); i++)
+      result += message->at(i);
+
     decodedMessage = result;
   }
 
