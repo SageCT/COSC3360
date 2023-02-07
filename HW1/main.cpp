@@ -1,4 +1,3 @@
-#include <chrono>
 #include <sstream>
 
 #include "huffmanTree.h"
@@ -65,18 +64,7 @@ int main() {
 
   // Create and print the Huffman Tree
   huffmanTree tree(freq);
-  auto start = chrono::high_resolution_clock::now();
-  tree.decode(codes, false);
-  auto end = chrono::high_resolution_clock::now();
-  auto duration = chrono::duration_cast<chrono::microseconds>(end - start);
-  cout << "Time taken (single): " << duration.count() << endl;
-
-  start = chrono::high_resolution_clock::now();
   tree.decode(codes, true);
-  end = chrono::high_resolution_clock::now();
-  duration = chrono::duration_cast<chrono::microseconds>(end - start);
-  cout << "Time taken (threaded): " << duration.count() << endl;
-
   tree.print();
   return 0;
 }
