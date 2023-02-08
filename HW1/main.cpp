@@ -1,4 +1,3 @@
-#include <chrono>
 #include <sstream>
 
 #include "huffmanTree.h"
@@ -14,10 +13,10 @@ int main() {
   vector<shared_ptr<node>> freq;
 
   string inputFileName, compressedFileName;
-  // cin >> inputFileName >> compressedFileName;
+  cin >> inputFileName >> compressedFileName;
 
-  inputFileName = "input2.txt";
-  compressedFileName = "comp2.txt";
+  // inputFileName = "input2.txt";
+  // compressedFileName = "comp2.txt";
 
   ifstream inputFile(inputFileName), compressedFile(compressedFileName);
 
@@ -65,18 +64,7 @@ int main() {
 
   // Create and print the Huffman Tree
   huffmanTree tree(freq);
-  auto start = chrono::high_resolution_clock::now();
-  tree.decode(codes, false);
-  auto end = chrono::high_resolution_clock::now();
-  auto duration = chrono::duration_cast<chrono::microseconds>(end - start);
-  cout << "Time taken (single): " << duration.count() << endl;
-
-  start = chrono::high_resolution_clock::now();
   tree.decode(codes, true);
-  end = chrono::high_resolution_clock::now();
-  duration = chrono::duration_cast<chrono::microseconds>(end - start);
-  cout << "Time taken (threaded): " << duration.count() << endl;
-
   tree.print();
   return 0;
 }

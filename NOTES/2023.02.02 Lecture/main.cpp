@@ -7,36 +7,61 @@
 using namespace std;
 
 int main() {
-  int pid;
-  cout << "I am the parent process" << endl;
-  for (int i = 0; i < 3; i++) {
-    pid = fork();
 
+  cout << "I am the parent process" << endl;
+  int pid;
+
+  // for (int x = 0; x < 4; x++) {
+  //   pid = fork();
+  //   if (pid == 0) {
+  //     cout << "I am the child process " << x << endl;
+  //     if (x == 1 || x == 2) {
+  //       pid = fork();
+  //       if (pid == 0) {
+  //         cout << "I am the grandchild process from child process " << x
+  //              << endl;
+  //         _exit(0); // Exit the grandchild process
+  //       }
+  //       wait(nullptr); // Wait for the grandchild processes to finish
+  //     }
+  //     _exit(0); // Exit the child process
+  //   }
+  //   wait(nullptr);  // Wait for the child processes to finish
+  // }
+
+  for (int x = 0; x < 4; x++) {
+    pid = fork();
     if (pid == 0) {
-      cout << "I am the child process " << i << endl;
-      if (i == 1) {
-        for (int i = 0; i < 3; i++)
-          wait(nullptr); // waits for all child process to complete
+      cout << "I am the child process " << x << endl;
+      if (x == 1 || x == 2) {
         pid = fork();
         if (pid == 0) {
-          cout << "I am the grandchild process " << i << endl;
-          _exit(0);
+          cout << "I am the grandchild process from child process " << x
+               << endl;
+          _exit(0); // Exit the grandchild process
         }
-        // for (int j = 0; j < 2; j++)
-        wait(nullptr);
+        wait(nullptr); // Wait for the grandchild processes to finish
       }
-      _exit(0);
-      // wait(nullptr);
+      _exit(0); // Exit the child process
     }
-    wait(nullptr);
+    wait(nullptr); // Wait for the child processes to finish
   }
-
-  // always use wait() outside the loop where you call fork()
-  // only use wait inside the loop to guarantee a certain order
-  // we will use it inside for assignments, exams & extra credit
+  
   /*
-  for(int i=0; i<3; i++)
-      wait(nullptr); //waits for all child process to complete
+    If greater than 0, the return value is the process ID of the child process
+    If less than 0, the fork failed
+    If 0, the return value is 0 for the child process
   */
+
+  /*
+ i am the parent process
+ i am the child process 0
+ i am the child process 1
+ i am the child process 2
+ i am the grand child process from child process 0
+ i am the grand child process from child process 1
+ i am the grand child process from child process 2
+  */
+
   return 0;
 }
