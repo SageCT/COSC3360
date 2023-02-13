@@ -37,7 +37,8 @@ struct threadData {
   shared_ptr<node> root;
   shared_ptr<code> codeVal;
   shared_ptr<vector<char>> decMessage;
-  threadData(shared_ptr<node> r, shared_ptr<code> c, int nC, shared_ptr<vector<char>> dC)
+  threadData(shared_ptr<node> r, shared_ptr<code> c, int nC,
+             shared_ptr<vector<char>> dC)
       : root(r), codeVal(c), numChars(nC), decMessage(dC) {}
 };
 
@@ -141,8 +142,9 @@ void huffmanTree::decode(vector<shared_ptr<code>> &c, bool threaded) {
           max = c.at(i)->pos.at(j);
 
     string result = "";
-    vector<pthread_t> threads;
-    shared_ptr<vector<char>> message(make_shared<vector<char>>(vector<char>(max +1)));
+    static vector<pthread_t> threads;
+    shared_ptr<vector<char>> message(
+        make_shared<vector<char>>(vector<char>(max + 1)));
 
     for (auto i : c) {
       threadData *arg = new threadData(root, i, max + 1, message);
