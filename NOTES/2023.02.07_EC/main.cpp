@@ -39,9 +39,6 @@ int main() {
           wait(nullptr);
         }
 
-        wait(nullptr);
-
-        pid == fork();
       }
       _exit(0);
     }
