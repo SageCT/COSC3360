@@ -113,22 +113,20 @@ void *decodethread(void *ptr) {
   // Change the void pointer to a shared_ptr<code> pointer
   threadData *c = (threadData *)ptr;
 
-  for (int i = 0; i < c->codeVal->pos.size(); i++) {
+  shared_ptr<node> cu(c->root);
+  string currCode = c->codeVal->data;
 
-    shared_ptr<node> cu(c->root);
-    string currCode = c->codeVal->data;
-
-    for (char curr : currCode) {
-      // If current char is 0, go left
-      // If current char is 1, go right
-      curr == '0' ? cu = cu->left : cu = cu->right;
-    }
-    // Once you get the char from the decode, set the data at the given position
-    // in the result string
-    for (int position : c->codeVal->pos) {
-      c->decMessage->at(position) = cu->data.at(0);
-    }
+  for (char curr : currCode) {
+    // If current char is 0, go left
+    // If current char is 1, go right
+    curr == '0' ? cu = cu->left : cu = cu->right;
   }
+  // Once you get the char from the decode, set the data at the given position
+  // in the result string
+  for (int position : c->codeVal->pos) {
+    c->decMessage->at(position) = cu->data.at(0);
+  }
+
   return nullptr;
 }
 
