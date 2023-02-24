@@ -22,13 +22,13 @@ int main() {
 
   // Gets line from inputFile, and checks if the first character is a digit,
   // if not a digit adds to a vector of nodes
+  int nodeNum = 0;
   while (getline(inputFile, in)) {
     string temp = "";
     temp += in.at(2);
-
     // Make node and push to vector
     shared_ptr<node> newNode(
-        make_shared<node>(node(in.substr(0, 1), stoi(temp))));
+        make_shared<node>(node(in.substr(0, 1), stoi(temp), nodeNum++)));
     freq.push_back(newNode), counter++;
   }
   sort(freq.begin(), freq.end(), huffmanCompare());

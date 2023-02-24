@@ -15,15 +15,19 @@ using namespace std;
 struct node {
   string data;
   int freq;
+  int nodeNum;
   shared_ptr<node> left, right;
 
   node() : data(""), freq(0), left(nullptr), right(nullptr) {}
-  node(string data, int freq)
-      : data(data), freq(freq), left(nullptr), right(nullptr) {}
-  node(string data, int freq, shared_ptr<node> left, shared_ptr<node> right)
-      : data(data), freq(freq), left(left), right(right) {}
+  node(string data, int freq, int nodeNum)
+      : data(data), freq(freq), nodeNum(nodeNum), left(nullptr),
+        right(nullptr) {}
+  node(string data, int freq, int nodeNum, shared_ptr<node> left,
+       shared_ptr<node> right)
+      : data(data), freq(freq), left(left), right(right), nodeNum(nodeNum) {}
   node(shared_ptr<node> n)
-      : data(n->data), freq(n->freq), left(n->left), right(n->right) {}
+      : data(n->data), freq(n->freq), left(n->left), right(n->right),
+        nodeNum(n->nodeNum) {}
 };
 
 struct code {
@@ -47,7 +51,7 @@ public:
   bool operator()(shared_ptr<node> &L, shared_ptr<node> &R) {
     if (L->freq == R->freq) {
       if (L->data == R->data) {
-        return (L < R);
+        return (L->nodeNum < R->nodeNum);
       }
       return L->data > R->data;
     }
@@ -83,12 +87,14 @@ void huffmanTree::buildHuffmanTree(vector<shared_ptr<node>> &n) {
   if (nodes != n)
     nodes = n;
 
+  // Counts number of nodes for comparions
+  int nodeNum = n.size();
+
   // Add nodes to an overridden priority queue
   for (int i = 0; i < n.size(); i++)
     pq.push(nodes.at(i));
 
   // Building the Huffman tree
-
   // While there is more than one node in the priority queue
   while (pq.size() > 1) {
     // Set left and right nodes as the smallest in the pq (the first two nodes)
@@ -99,8 +105,8 @@ void huffmanTree::buildHuffmanTree(vector<shared_ptr<node>> &n) {
 
     // Create a new node with the sum of the frequencies of the two smaller
     // nodes, this will be the "parent" node
-    shared_ptr<node> parent(
-        make_shared<node>(node("\0", left->freq + right->freq, left, right)));
+    shared_ptr<node> parent(make_shared<node>(
+        node("\0", left->freq + right->freq, nodeNum++, left, right)));
 
     // Because the nodes will always be sorted in the priority queue, we can
     // just add the parent back the the queue
