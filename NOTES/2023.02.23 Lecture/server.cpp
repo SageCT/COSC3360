@@ -1,5 +1,5 @@
 // A simple server in the internet domain using TCP
-// The port nu1mber is passed as an argument
+// The port number is passed as an argument
 
 // Please note this is a C program
 // It compiles without warnings with gcc
@@ -27,7 +27,9 @@ int main(int argc, char *argv[]) {
     fprintf(stderr, "ERROR, no port provided\n");
     exit(1);
   }
+
   sockfd = socket(AF_INET, SOCK_STREAM, 0);
+
   if (sockfd < 0)
     error("ERROR opening socket");
   bzero((char *)&serv_addr, sizeof(serv_addr));
