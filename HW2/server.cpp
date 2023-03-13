@@ -1,10 +1,12 @@
 #include "huffmanTree.h"
+#include <netdb.h>
 #include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <sys/wait.h>
 #include <unistd.h>
 #include <vector>
 
@@ -13,10 +15,16 @@ void error(char *msg) {
   exit(1);
 }
 
+void fireman(int) {
+  while (waitpid(-1, NULL, WNOHANG) > 0) {
+    // cout << "A child process ended" << endl;
+    break;
+  }
+}
+
 int main(int argc, char *argv[]) {
   int sockfd, newsockfd, portno, clilen;
   char buffer[256];
-  huffmanTree tree;
   // struct with the codes and their positions in a vector of ints
   // vector with the characters and their frequencies
   vector<shared_ptr<code>> codes;
@@ -38,6 +46,10 @@ int main(int argc, char *argv[]) {
     freq.push_back(newNode);
   }
 
+  // Create the tree
+  huffmanTree tree(freq);
+  tree.print();
+
   // Creating socket file descriptor
   if (argc < 2) {
     fprintf(stderr, "ERROR, no port provided\n");
@@ -45,7 +57,8 @@ int main(int argc, char *argv[]) {
   }
 
   // if the socket is not created/error print error and exit
-  if (sockfd = socket(AF_INET, SOCK_STREAM, 0) < 0) {
+  sockfd = socket(AF_INET, SOCK_STREAM, 0);
+  if (sockfd < 0) {
     error("ERROR opening socket");
     exit(EXIT_FAILURE);
   }
@@ -63,7 +76,6 @@ int main(int argc, char *argv[]) {
 
   // Listens to the socket, then sets a new socket that is connected to the
   // server, the old one remains open to create additional connections
-
   listen(sockfd, 5);
   clilen = sizeof(cli_addr);
   newsockfd =
@@ -71,14 +83,18 @@ int main(int argc, char *argv[]) {
 
   if (newsockfd < 0)
     error("ERROR on accept");
+  else
+    cout << ("Connection established");
 
   bzero(buffer, 256);
   n = read(newsockfd, buffer, 255);
   if (n < 0)
     error("ERROR reading from socket");
+
   printf("Here is the message: %s\n", buffer);
   n = write(newsockfd, "I got your message", 18);
   if (n < 0)
     error("ERROR writing to socket");
+
   return 0;
 }
