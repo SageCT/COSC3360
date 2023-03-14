@@ -33,6 +33,7 @@ int main(int argc, char *argv[]) {
   // sockaddr_in is a structure containing an internet address
   struct sockaddr_in serv_addr, cli_addr;
   int n;
+  signal(SIGCHLD, fireman);
 
   // Take inputs from STDIN
   string in;
@@ -48,7 +49,6 @@ int main(int argc, char *argv[]) {
 
   // Create the tree
   huffmanTree tree(freq);
-  tree.print();
 
   // Creating socket file descriptor
   if (argc < 2) {
@@ -78,20 +78,28 @@ int main(int argc, char *argv[]) {
   // server, the old one remains open to create additional connections
   listen(sockfd, 5);
   clilen = sizeof(cli_addr);
-  newsockfd =
-      accept(sockfd, (struct sockaddr *)&cli_addr, (socklen_t *)&clilen);
+  vector<string> messages;
 
-  if (newsockfd < 0)
-    error("ERROR on accept");
-  else
-    cout << ("Connection established");
+  for (int i = 0; i < nodeNum; i++) {
+    bzero(buffer, 256);
 
-  bzero(buffer, 256);
-  n = read(newsockfd, buffer, 255);
-  if (n < 0)
-    error("ERROR reading from socket");
+    if (n < 0)
+      error("ERROR reading from socket");
 
-  printf("Here is the message: %s\n", buffer);
+    while (true) {
+      newsockfd =
+          accept(sockfd, (struct sockaddr *)&cli_addr, (socklen_t *)&clilen);
+
+      if (newsockfd < 0)
+        error("ERROR on accept");
+
+      n = read(newsockfd, buffer, 256);
+      if (n < 0)
+        error("ERROR reading from socket");
+    }
+  }
+
+  std::cout << "Here is the message: " + (string)buffer + "\n";
   n = write(newsockfd, "I got your message", 18);
   if (n < 0)
     error("ERROR writing to socket");
