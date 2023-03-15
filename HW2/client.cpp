@@ -2,6 +2,7 @@
 #include <iostream>
 #include <netdb.h>
 #include <netinet/in.h>
+#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -14,6 +15,13 @@
 void error(char *msg) {
   perror(msg);
   exit(1);
+}
+
+void *socketDecodeThread(void *args) {
+  // Change the void pointer to a socketThreadData pointer
+  socketThreadData *data = (socketThreadData *)args;
+  // Get the socket file descriptor
+  int sockfd = serv_addr->sockfd;
 }
 
 int main(int argc, char *argv[]) {
@@ -45,19 +53,27 @@ int main(int argc, char *argv[]) {
   if (connect(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
     error("ERROR connecting");
 
+  // Creating the buffer, input string, and vectors for
+  // the threads (pthread_t and threadData) and inputs
   char buffer[256];
-  std::string in;
+  std::string in = "";
+  int size = 0;
   vector<string> inputs;
+  vector<pthread_t> threads;
+  vector<threadData> args;
   int size = 0;
   while (getline(std::cin, in))
-    inputs.push_back(in);
-  int size = inputs.size();
+    inputs.push_back(in), size++;
+
+  for (int i = 0; i < size; i++) {
+  }
 
   strcpy(buffer, to_string(size).c_str());
 
   for (int i = 0; i < size; i++) {
     // Get the code from the inputs vector and send it to the server
-    strcpy(buffer, inputs[i].c_str());
+    strcpy(buffer,
+           inputs[i].substr(0, find(inputs[i].begin(), inputs[i].end(), ' ')));
     n = write(sockfd, buffer, strlen(buffer));
     if (n < 0)
       error("ERROR writing to socket");
@@ -65,6 +81,8 @@ int main(int argc, char *argv[]) {
   }
 
   n = write(sockfd, &size, sizeof(int));
+  if (n < 0)
+    error("ERROR writing to socket");
 
   strcpy(buffer, buffer + '\0');
   int value = 11;

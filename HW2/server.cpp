@@ -1,4 +1,4 @@
-#include "huffmanTree.h"
+#include <algorithm>
 #include <netdb.h>
 #include <netinet/in.h>
 #include <stdio.h>
@@ -9,6 +9,8 @@
 #include <sys/wait.h>
 #include <unistd.h>
 #include <vector>
+
+#include "huffmanTree.h"
 
 void error(char *msg) {
   perror(msg);
@@ -96,13 +98,28 @@ int main(int argc, char *argv[]) {
       n = read(newsockfd, buffer, 256);
       if (n < 0)
         error("ERROR reading from socket");
+
+      // Turn the binary code into the desired character from the tree
+      string temp(buffer);
+      cout << "Buffer: " << temp << endl;
+      bzero(buffer, 256);
+
+      node *tempRoot = tree.getRoot().get();
+
+      // Finds the desired node in the tree
+      for (auto c : temp)
+        c == 0 ? tempRoot = tempRoot->left.get()
+               : tempRoot = tempRoot->right.get();
+
+      cout << "Character to send back to client: " << tempRoot->data;
+
+      // Send the character back to the client
+      n = write(newsockfd, tempRoot->data.c_str(), 1);
+      if (n < 0)
+        error("ERROR writing to socket");
     }
   }
 
-  std::cout << "Here is the message: " + (string)buffer + "\n";
-  n = write(newsockfd, "I got your message", 18);
-  if (n < 0)
-    error("ERROR writing to socket");
-
+  close(newsockfd);
   return 0;
 }

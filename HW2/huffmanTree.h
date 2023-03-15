@@ -46,6 +46,11 @@ struct threadData {
       : root(r), codeVal(c), numChars(nC), decMessage(dC) {}
 };
 
+struct socketThreadData {
+  code *codeVal;
+  sockaddr_in serv_addr;
+};
+
 class huffmanCompare {
 public:
   bool operator()(shared_ptr<node> &L, shared_ptr<node> &R) {
