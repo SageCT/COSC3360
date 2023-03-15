@@ -3,6 +3,7 @@
 #include <netdb.h>
 #include <netinet/in.h>
 #include <pthread.h>
+#include <sstream>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -21,7 +22,26 @@ void *socketDecodeThread(void *args) {
   // Change the void pointer to a socketThreadData pointer
   socketThreadData *data = (socketThreadData *)args;
   // Get the socket file descriptor
-  int sockfd = serv_addr->sockfd;
+  int sockfd, n;
+  char buffer[256];
+  struct sockaddr_in serv_addr;
+  sockfd = socket(AF_INET, SOCK_STREAM, 0);
+  if (sockfd < 0)
+    error("ERROR opening socket");
+
+  if (connect(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
+    error("ERROR connecting");
+
+  // Send the code to the server
+  n = write(sockfd, data->codeVal->data.c_str(), 256);
+  if (n < 0)
+    error("ERROR writing to socket (in socketDecodeThread)");
+
+  n = read(sockfd, buffer, 256);
+  if (n < 0)
+    error("ERROR reading from socket (in socketDecodeThread)");
+
+    return nullptr;
 }
 
 int main(int argc, char *argv[]) {
@@ -57,7 +77,7 @@ int main(int argc, char *argv[]) {
   // the threads (pthread_t and threadData) and inputs
   char buffer[256];
   std::string in = "";
-  int size = 0;
+  int size = 0, maxIndex = 0;
   vector<string> inputs;
   vector<pthread_t> threads;
   vector<threadData> args;
@@ -65,15 +85,26 @@ int main(int argc, char *argv[]) {
   while (getline(std::cin, in))
     inputs.push_back(in), size++;
 
-  for (int i = 0; i < size; i++) {
+  // Get max index position for the final message
+  for (auto i : inputs) {
+    istringstream ss(i);
+    int temp;
+    while (ss >> temp)
+      if (temp > maxIndex)
+        maxIndex = temp;
   }
+
+  vector<char> finalMessage(maxIndex + 1, '*');
 
   strcpy(buffer, to_string(size).c_str());
 
   for (int i = 0; i < size; i++) {
     // Get the code from the inputs vector and send it to the server
-    strcpy(buffer,
-           inputs[i].substr(0, find(inputs[i].begin(), inputs[i].end(), ' ')));
+
+    // copies the code from the input vector to the buffer
+    // Ex. 11 1 3 5 would have '11' copied to the buffer
+    strcpy(buffer, inputs[i].substr(0, inputs[i].find(" ")).c_str());
+    string temp = inputs[i].substr(inputs[i].find(" "));
     n = write(sockfd, buffer, strlen(buffer));
     if (n < 0)
       error("ERROR writing to socket");

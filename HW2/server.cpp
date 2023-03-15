@@ -114,7 +114,8 @@ int main(int argc, char *argv[]) {
       cout << "Character to send back to client: " << tempRoot->data;
 
       // Send the character back to the client
-      n = write(newsockfd, tempRoot->data.c_str(), 1);
+      strcpy(buffer, tempRoot->data.c_str());
+      n = write(newsockfd, buffer, 1);
       if (n < 0)
         error("ERROR writing to socket");
     }
