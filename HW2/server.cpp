@@ -51,6 +51,7 @@ int main(int argc, char *argv[]) {
 
   // Create the tree
   huffmanTree tree(freq);
+  tree.print(true);
 
   // Creating socket file descriptor
   if (argc < 2) {
@@ -101,15 +102,17 @@ int main(int argc, char *argv[]) {
 
       // Turn the binary code into the desired character from the tree
       string temp(buffer);
-      cout << "Buffer: " << temp << endl;
+      cout << "Buffer: " << buffer << endl;
+
       bzero(buffer, 256);
 
-      node *tempRoot = tree.getRoot().get();
+      shared_ptr<node> tempRoot = tree.getRoot();
+
+      cout << "tempRoot (before loop)" << tempRoot->data << endl;
 
       // Finds the desired node in the tree
       for (auto c : temp)
-        c == 0 ? tempRoot = tempRoot->left.get()
-               : tempRoot = tempRoot->right.get();
+        tempRoot = c == '0' ? tempRoot->left : tempRoot->right;
 
       cout << "Character to send back to client: " << tempRoot->data;
 

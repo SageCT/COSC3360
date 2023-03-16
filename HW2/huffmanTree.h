@@ -1,14 +1,20 @@
 #ifndef HUFFMANTREE_H
 #define HUFFMANTREE_H
 
-#include <pthread.h>
-
 #include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <memory>
+#include <netdb.h>
+#include <netinet/in.h>
+#include <pthread.h>
 #include <queue>
+#include <string.h>
 #include <string>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <unistd.h>
 #include <vector>
 
 using namespace std;
@@ -48,7 +54,13 @@ struct threadData {
 
 struct socketThreadData {
   code *codeVal;
-  sockaddr_in serv_addr;
+  char *hostname;
+  int portno;
+  vector<char> decMessage;
+
+  socketThreadData(code *c, char *hn, int pn, vector<char> dC)
+      : codeVal(c), hostname(hn), portno(pn), decMessage(dC) {}
+  ~socketThreadData() { delete codeVal; }
 };
 
 class huffmanCompare {
@@ -81,9 +93,10 @@ public:
   void buildHuffmanTree(vector<shared_ptr<node>> &);
   shared_ptr<node> getRoot() const { return root; };
   void decode(vector<shared_ptr<code>> &, bool threaded = false);
-  void print() {
+  void print(bool socket = false) {
     printInOrder(root);
-    std::cout << "Original message: " << decodedMessage << std::endl;
+    if (!socket)
+      std::cout << "Original message: " << decodedMessage << std::endl;
   };
 };
 
@@ -102,7 +115,8 @@ void huffmanTree::buildHuffmanTree(vector<shared_ptr<node>> &n) {
   // Building the Huffman tree
   // While there is more than one node in the priority queue
   while (pq.size() > 1) {
-    // Set left and right nodes as the smallest in the pq (the first two nodes)
+    // Set left and right nodes as the smallest in the pq (the first two
+    // nodes)
     shared_ptr<node> left(pq.top());
     pq.pop();
     shared_ptr<node> right(pq.top());

@@ -1,3 +1,5 @@
+#include "client.cpp"
+#include "server.cpp"
 #include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
