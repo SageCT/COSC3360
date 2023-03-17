@@ -1,4 +1,3 @@
-#include "huffmanTree.h"
 #include <iostream>
 #include <netdb.h>
 #include <netinet/in.h>
@@ -12,6 +11,8 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
+
+#include "huffmanTree.h"
 
 void error(char *msg) {
   perror(msg);
