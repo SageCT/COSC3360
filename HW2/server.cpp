@@ -1,9 +1,11 @@
 #include <algorithm>
+#include <iostream>
 #include <netdb.h>
 #include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <string>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -26,7 +28,6 @@ void fireman(int) {
 
 int main(int argc, char *argv[]) {
   int server_fd, portno;
-  char buffer[256] = {0};
   // struct with the codes and their positions in a vector of ints
   // vector with the characters and their frequencies
   vector<shared_ptr<code>> codes;
@@ -34,6 +35,9 @@ int main(int argc, char *argv[]) {
   // sockaddr_in is a structure containing an internet address
   struct sockaddr_in address;
   int n, opt = 1;
+
+  // Set up the signal handler
+  signal(SIGCHLD, fireman);
 
   // Checking for valid number of arguments
   if (argc < 2) {
@@ -65,9 +69,6 @@ int main(int argc, char *argv[]) {
     exit(EXIT_FAILURE);
   }
 
-  // Set up the signal handler
-  signal(SIGCHLD, fireman);
-
   // Take inputs from STDIN
   string in;
   int nodeNum = 0;
@@ -86,50 +87,53 @@ int main(int argc, char *argv[]) {
 
   vector<string> messages;
 
-  for (int i = 0; i < nodeNum; i++) {
-    bzero(buffer, 256);
+  // Listens to the socket for incoming connections
+  if (listen(server_fd, nodeNum) < 0) {
+    perror("listen");
+    exit(EXIT_FAILURE);
+  }
+  int i = 0;
+  while (i < nodeNum) {
+    // Accepts the incoming client connection
+    char buffer[256] = {0};
+    sockaddr_in client_address = {0};
+    socklen_t client_address_size = sizeof(client_address);
+    int client_socket =
+        accept(server_fd, (sockaddr *)&client_address, &client_address_size);
+    if (client_socket < 0)
+      error("ERROR on accept");
 
-    while (true) {
-      // Listens to the socket for incoming connections
-      if (listen(server_fd, SOMAXCONN) < 0) {
-        perror("listen");
-        exit(EXIT_FAILURE);
-      }
-      // Accepts the incoming client connection
-      sockaddr_in client_address = {0};
-      socklen_t client_address_size = sizeof(client_address);
-      int client_socket =
-          accept(server_fd, (sockaddr *)&client_address, &client_address_size);
-      if (client_socket < 0)
-        error("ERROR on accept");
+    if (fork() == 0) {
 
       n = recv(client_socket, buffer, 256, 0);
       if (n < 0)
         error("ERROR reading from socket");
 
       string temp(buffer);
-      cout << "Buffer: " << buffer << endl;
-
-      bzero(buffer, 256);
+      cout << "Buffer: " << temp << endl;
 
       shared_ptr<node> tempRoot = tree.getRoot();
-
-      cout << "tempRoot (before loop)" << tempRoot->data << endl;
 
       // Finds the desired node in the tree
       for (auto c : temp)
         tempRoot = c == '0' ? tempRoot->left : tempRoot->right;
 
-      cout << "Character to send back to client: " << tempRoot->data;
+      std::cout << "Character to send back to client: " << tempRoot->data
+                << std::endl;
 
       // Send the character back to the client
-      strcpy(buffer, tempRoot->data.c_str());
+      bzero(buffer, 256);
+      buffer[0] = tempRoot->data[0];
       n = send(client_socket, buffer, 1, 0);
       if (n < 0)
         error("ERROR writing to socket");
 
+      // Close socket and exit child process
       close(client_socket);
+      _exit(0);
     }
+    wait(nullptr);
+    i++;
   }
 
   close(server_fd);
