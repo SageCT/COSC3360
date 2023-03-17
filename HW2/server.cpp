@@ -25,16 +25,47 @@ void fireman(int) {
 }
 
 int main(int argc, char *argv[]) {
-  int sockfd, newsockfd, portno, clilen;
-  char buffer[256];
+  int server_fd, portno;
+  char buffer[256] = {0};
   // struct with the codes and their positions in a vector of ints
   // vector with the characters and their frequencies
   vector<shared_ptr<code>> codes;
   vector<shared_ptr<node>> freq;
-
   // sockaddr_in is a structure containing an internet address
-  struct sockaddr_in serv_addr, cli_addr;
-  int n;
+  struct sockaddr_in address;
+  int n, opt = 1;
+
+  // Checking for valid number of arguments
+  if (argc < 2) {
+    fprintf(stderr, "ERROR, no port provided\n");
+    exit(1);
+  }
+
+  // Create socket file descriptor and check for errors
+  if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
+    perror("socket failed");
+    exit(EXIT_FAILURE);
+  }
+
+  // Set socket options
+  if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt,
+                 sizeof(opt))) {
+    perror("setsockopt");
+    exit(EXIT_FAILURE);
+  }
+
+  // Set the server address
+  address.sin_family = AF_INET;
+  address.sin_addr.s_addr = INADDR_ANY;
+  address.sin_port = htons(atoi(argv[1]));
+
+  // Binds the socket to the address
+  if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0) {
+    perror("bind failed");
+    exit(EXIT_FAILURE);
+  }
+
+  // Set up the signal handler
   signal(SIGCHLD, fireman);
 
   // Take inputs from STDIN
@@ -53,54 +84,29 @@ int main(int argc, char *argv[]) {
   huffmanTree tree(freq);
   tree.print(true);
 
-  // Creating socket file descriptor
-  if (argc < 2) {
-    fprintf(stderr, "ERROR, no port provided\n");
-    exit(1);
-  }
-
-  // if the socket is not created/error print error and exit
-  sockfd = socket(AF_INET, SOCK_STREAM, 0);
-  if (sockfd < 0) {
-    error("ERROR opening socket");
-    exit(EXIT_FAILURE);
-  }
-
-  // if socket is created/valid, then bind the socket to an address
-  bzero((char *)&serv_addr, sizeof(serv_addr));
-  portno = atoi(argv[1]);
-  serv_addr.sin_family = AF_INET;
-  serv_addr.sin_addr.s_addr = INADDR_ANY;
-  serv_addr.sin_port = htons(portno);
-
-  // Binds the server address to the socket
-  if (bind(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
-    error("ERROR on binding");
-
-  // Listens to the socket, then sets a new socket that is connected to the
-  // server, the old one remains open to create additional connections
-  listen(sockfd, 5);
-  clilen = sizeof(cli_addr);
   vector<string> messages;
 
   for (int i = 0; i < nodeNum; i++) {
     bzero(buffer, 256);
 
-    if (n < 0)
-      error("ERROR reading from socket");
-
     while (true) {
-      newsockfd =
-          accept(sockfd, (struct sockaddr *)&cli_addr, (socklen_t *)&clilen);
-
-      if (newsockfd < 0)
+      // Listens to the socket for incoming connections
+      if (listen(server_fd, SOMAXCONN) < 0) {
+        perror("listen");
+        exit(EXIT_FAILURE);
+      }
+      // Accepts the incoming client connection
+      sockaddr_in client_address = {0};
+      socklen_t client_address_size = sizeof(client_address);
+      int client_socket =
+          accept(server_fd, (sockaddr *)&client_address, &client_address_size);
+      if (client_socket < 0)
         error("ERROR on accept");
 
-      n = read(newsockfd, buffer, 256);
+      n = recv(client_socket, buffer, 256, 0);
       if (n < 0)
         error("ERROR reading from socket");
 
-      // Turn the binary code into the desired character from the tree
       string temp(buffer);
       cout << "Buffer: " << buffer << endl;
 
@@ -118,12 +124,14 @@ int main(int argc, char *argv[]) {
 
       // Send the character back to the client
       strcpy(buffer, tempRoot->data.c_str());
-      n = write(newsockfd, buffer, 1);
+      n = send(client_socket, buffer, 1, 0);
       if (n < 0)
         error("ERROR writing to socket");
+
+      close(client_socket);
     }
   }
 
-  close(newsockfd);
+  close(server_fd);
   return 0;
 }

@@ -18,7 +18,6 @@ int main(int argc, char *argv[]) {
   int opt = 1;
   socklen_t addrlen = sizeof(address);
   char buffer[1024] = {0};
-  char *hello = "Hello from server";
 
   // Create a socket file descriptor
   if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
@@ -50,7 +49,6 @@ int main(int argc, char *argv[]) {
     exit(EXIT_FAILURE);
   }
 
-  // Set up vector of client threads
   sockaddr_in client_address = {0};
   socklen_t client_address_size = sizeof(client_address);
   int client_socket = accept(server_fd, (struct sockaddr *)&client_address,
@@ -65,7 +63,7 @@ int main(int argc, char *argv[]) {
     char buffer[256] = {0};
 
     // Read the client's message
-    valread = read(client_socket, buffer, 256);
+    valread = recv(client_socket, buffer, 256, 0);
     if (buffer[0] == '-' && buffer[1] == '1')
       break;
     std::cout << "Message recieved: " << buffer << std::endl;
