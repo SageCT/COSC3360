@@ -149,7 +149,7 @@ int main(int argc, char *argv[]) {
       if (i->decMessage[j] != '*')
         finalMessage[j] = i->decMessage[j];
 
-  cout << "Decoded message: " << finalMessage << std::endl;
+  cout << "Original message: " << finalMessage << std::endl;
 
   return 0;
 }

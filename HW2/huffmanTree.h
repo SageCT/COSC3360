@@ -92,7 +92,7 @@ public:
   };
   void buildHuffmanTree(vector<shared_ptr<node>> &);
   shared_ptr<node> getRoot() const { return root; };
-  void decode(vector<shared_ptr<code>> &, bool threaded = false);
+  // void decode(vector<shared_ptr<code>> &, bool threaded = false);
   void print(bool socket = false) {
     printInOrder(root);
     if (!socket)
@@ -155,73 +155,73 @@ void *decodethread(void *ptr) {
   return nullptr;
 }
 
-void huffmanTree::decode(vector<shared_ptr<code>> &c, bool threaded) {
-  if (threaded) {
-    int max = 0;
+// void huffmanTree::decode(vector<shared_ptr<code>> &c, bool threaded) {
+//   if (threaded) {
+//     int max = 0;
 
-    for (int i = 0; i < c.size(); i++)
-      for (int j = 0; j < c.at(i)->pos.size(); j++)
-        if (max < c.at(i)->pos.at(j))
-          max = c.at(i)->pos.at(j);
+//     for (int i = 0; i < c.size(); i++)
+//       for (int j = 0; j < c.at(i)->pos.size(); j++)
+//         if (max < c.at(i)->pos.at(j))
+//           max = c.at(i)->pos.at(j);
 
-    string result = "";
-    static vector<pthread_t> threads;
-    shared_ptr<vector<char>> message(
-        make_shared<vector<char>>(vector<char>(max + 1)));
+//     string result = "";
+//     static vector<pthread_t> threads;
+//     shared_ptr<vector<char>> message(
+//         make_shared<vector<char>>(vector<char>(max + 1)));
 
-    for (auto i : c) {
-      threadData *arg = new threadData(root, i, max + 1, message);
-      pthread_t thread;
-      pthread_create(&thread, nullptr, decodethread, arg);
-      threads.push_back(thread);
-    }
+//     for (auto i : c) {
+//       threadData *arg = new threadData(root, i, max + 1, message);
+//       pthread_t thread;
+//       pthread_create(&thread, nullptr, decodethread, arg);
+//       threads.push_back(thread);
+//     }
 
-    for (auto &i : threads)
-      pthread_join(i, nullptr);
+//     for (auto &i : threads)
+//       pthread_join(i, nullptr);
 
-    for (int i = 0; i < message->size(); i++)
-      result += message->at(i);
+//     for (int i = 0; i < message->size(); i++)
+//       result += message->at(i);
 
-    decodedMessage = result;
-  }
+//     decodedMessage = result;
+//   }
 
-  else {
-    // Find the largest position to find the length of the final string
-    int max = 0;
+//   else {
+//     // Find the largest position to find the length of the final string
+//     int max = 0;
 
-    for (int i = 0; i < c.size(); i++)
-      for (int j = 0; j < c.at(i)->pos.size(); j++) {
-        if (max < c.at(i)->pos.at(j))
-          max = c.at(i)->pos.at(j);
-      }
-    string result(max + 1, '*');
+//     for (int i = 0; i < c.size(); i++)
+//       for (int j = 0; j < c.at(i)->pos.size(); j++) {
+//         if (max < c.at(i)->pos.at(j))
+//           max = c.at(i)->pos.at(j);
+//       }
+//     string result(max + 1, '*');
 
-    for (int i = 0; i < c.size(); i++) {
-      string currCode = c.at(i)->data;
-      shared_ptr<node> cu(make_shared<node>(root));
+//     for (int i = 0; i < c.size(); i++) {
+//       string currCode = c.at(i)->data;
+//       shared_ptr<node> cu(make_shared<node>(root));
 
-      for (auto curr : currCode) {
-        // If current char is 0, go left
-        // If current char is 1, go right
-        curr == '0' ? cu = cu->left : cu = cu->right;
-      }
+//       for (auto curr : currCode) {
+//         // If current char is 0, go left
+//         // If current char is 1, go right
+//         curr == '0' ? cu = cu->left : cu = cu->right;
+//       }
 
-      // Once you get the char from the decode, set the data at the given
-      // position in the result string
-      for (int position : c.at(i)->pos) {
-        result.at(position) = cu->data.at(0);
-      }
-    }
-    decodedMessage = result;
-  }
-}
+//       // Once you get the char from the decode, set the data at the given
+//       // position in the result string
+//       for (int position : c.at(i)->pos) {
+//         result.at(position) = cu->data.at(0);
+//       }
+//     }
+//     decodedMessage = result;
+//   }
+// }
 
 shared_ptr<node> huffmanTree::printInOrder(shared_ptr<node> &n, string c) {
   if (!n)
     return nullptr;
   printInOrder(n->left, c + "0");
   if (n->data != "\0") {
-    std::cout << "Symbol: " << n->data << ", Frequency : " << n->freq
+    std::cout << "Symbol: " << n->data << ", Frequency: " << n->freq
               << ", Code: " << c << endl;
   }
   printInOrder(n->right, c + "1");
