@@ -22,40 +22,40 @@ void error(char *msg) {
 void *socketDecodeThread(void *args) {
   // Change the void pointer to a socketThreadData pointer
   socketThreadData *data = (socketThreadData *)args;
-  // Get the socket file descriptor
+
   int sockfd, n;
-  char buffer[256];
+  char buffer[256] = {0};
   struct sockaddr_in serv_addr;
   struct hostent *server;
-  sockfd = socket(AF_INET, SOCK_STREAM, 0);
-  if (sockfd < 0)
-    error("ERROR opening socket");
-  server = gethostbyname(data->hostname);
-  if (server == nullptr) {
+  // Create socket file descriptor
+  if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+    error("Error creating socket");
+
+  // Get server address from hostname in socketThreadData
+  if ((server = gethostbyname(data->hostname)) == NULL)
     error("ERROR, no such host");
-    _exit(-1);
-  }
-  bzero((char *)&serv_addr, sizeof(serv_addr));
+
+  // Set the server address
+  memset(&serv_addr, '0', sizeof(serv_addr));
+  serv_addr.sin_family = AF_INET;
+  serv_addr.sin_port = htons(data->portno);
   bcopy((char *)server->h_addr, (char *)&serv_addr.sin_addr.s_addr,
         server->h_length);
 
+  // Connect to the server
   if (connect(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
     error("ERROR connecting");
 
-  cout << "Connected to server, data to send: " << data->codeVal->data << endl;
-
-  // Send the code to the server
+  // Copy the huffman code to the buffer from the socketThreadData passed in
   strcpy(buffer, data->codeVal->data.c_str());
 
-  cout << "Sending buffer: " << buffer << endl;
-  n = write(sockfd, buffer, 256);
-  if (n < 0)
+  // Send the code to server for decoding
+  if (send(sockfd, buffer, 256, 0) < 0)
     error("ERROR writing to socket (in socketDecodeThread)");
   bzero(buffer, 256);
 
   // Read the decoded char from the server
-  n = read(sockfd, buffer, 256);
-  if (n < 0)
+  if (recv(sockfd, buffer, 256, 0) < 0)
     error("ERROR reading from socket (in socketDecodeThread)");
 
   for (int c : data->codeVal->pos)
@@ -76,26 +76,10 @@ int main(int argc, char *argv[]) {
     exit(0);
   }
 
+  // Get the port number and hostname from the command line arguments to send to
+  // threads
   portno = atoi(argv[2]);
   hostname = argv[1];
-  sockfd = socket(AF_INET, SOCK_STREAM, 0);
-
-  if (sockfd < 0)
-    error("ERROR opening socket");
-  server = gethostbyname(argv[1]);
-
-  if (server == NULL) {
-    fprintf(stderr, "ERROR, no such host\n");
-    exit(0);
-  }
-
-  bzero((char *)&serv_addr, sizeof(serv_addr));
-  serv_addr.sin_family = AF_INET;
-  bcopy((char *)server->h_addr, (char *)&serv_addr.sin_addr.s_addr,
-        server->h_length);
-  serv_addr.sin_port = htons(portno);
-  if (connect(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
-    error("ERROR connecting");
 
   // Creating the buffer, input string, and vectors for
   // the threads (pthread_t and threadData) and inputs
@@ -118,7 +102,7 @@ int main(int argc, char *argv[]) {
         maxIndex = temp;
   }
 
-  vector<char> finalMessage(maxIndex + 1, '*');
+  string finalMessage(maxIndex + 1, '*');
 
   strcpy(buffer, to_string(size).c_str());
 
@@ -145,7 +129,6 @@ int main(int argc, char *argv[]) {
         new socketThreadData(codeVal, hostname, portno, emptyMessageVec);
 
     args.push_back(data);
-    std::cout << args.at(i)->codeVal->data << std::endl;
   }
 
   for (auto &i : args) {
@@ -155,22 +138,18 @@ int main(int argc, char *argv[]) {
     threads.push_back(thread);
   }
 
+  // Join the threads
   for (auto &i : threads) {
-    // Join the threads
-
     pthread_join(i, nullptr);
   }
 
+  // Add all the non-junk values to the final message
   for (auto &i : args)
     for (int j = 0; j < i->decMessage.size(); j++)
       if (i->decMessage[j] != '*')
         finalMessage[j] = i->decMessage[j];
 
-  string finalMessageString = "";
-  for (auto i : finalMessage)
-    finalMessageString += i;
-
-  cout << "Decoded message: " << finalMessageString << std::endl;
+  cout << "Decoded message: " << finalMessage << std::endl;
 
   return 0;
 }

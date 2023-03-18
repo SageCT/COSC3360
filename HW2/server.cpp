@@ -2,6 +2,7 @@
 #include <iostream>
 #include <netdb.h>
 #include <netinet/in.h>
+#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -103,23 +104,20 @@ int main(int argc, char *argv[]) {
     if (client_socket < 0)
       error("ERROR on accept");
 
-    if (fork() == 0) {
+    if ((n = fork()) == 0) {
 
       n = recv(client_socket, buffer, 256, 0);
       if (n < 0)
         error("ERROR reading from socket");
 
-      string temp(buffer);
-      cout << "Buffer: " << temp << endl;
+      string temp = buffer;
 
       shared_ptr<node> tempRoot = tree.getRoot();
 
       // Finds the desired node in the tree
-      for (auto c : temp)
-        tempRoot = c == '0' ? tempRoot->left : tempRoot->right;
-
-      std::cout << "Character to send back to client: " << tempRoot->data
-                << std::endl;
+      for (auto c : temp) {
+        c == '0' ? tempRoot = tempRoot->left : tempRoot = tempRoot->right;
+      }
 
       // Send the character back to the client
       bzero(buffer, 256);

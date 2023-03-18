@@ -20,7 +20,6 @@ int main(int argc, char *argv[]) {
   struct sockaddr_in serv_addr;
   struct hostent *server;
   char buffer[1024] = {0};
-  char *hello = "Hello from client";
 
   // Create a socket file descriptor
   if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
