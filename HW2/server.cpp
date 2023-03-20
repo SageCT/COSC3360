@@ -53,11 +53,11 @@ int main(int argc, char *argv[]) {
   }
 
   // Set socket options
-  if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt,
-                 sizeof(opt))) {
-    perror("setsockopt");
-    exit(EXIT_FAILURE);
-  }
+  // if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt,
+  //                sizeof(opt))) {
+  //   perror("setsockopt");
+  //   exit(EXIT_FAILURE);
+  // }
 
   // Set the server address
   address.sin_family = AF_INET;
@@ -115,9 +115,8 @@ int main(int argc, char *argv[]) {
       shared_ptr<node> tempRoot = tree.getRoot();
 
       // Finds the desired node in the tree
-      for (auto c : temp) {
+      for (auto c : temp)
         c == '0' ? tempRoot = tempRoot->left : tempRoot = tempRoot->right;
-      }
 
       // Send the character back to the client
       bzero(buffer, 256);

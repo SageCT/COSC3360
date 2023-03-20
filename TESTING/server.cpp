@@ -26,11 +26,11 @@ int main(int argc, char *argv[]) {
   }
 
   // Set socket options
-  if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt,
-                 sizeof(opt))) {
-    perror("setsockopt");
-    exit(EXIT_FAILURE);
-  }
+  // if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt,
+  //                sizeof(opt))) {
+  //   perror("setsockopt");
+  //   exit(EXIT_FAILURE);
+  // }
 
   // Set the server address
   address.sin_family = AF_INET;
