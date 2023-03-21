@@ -102,8 +102,6 @@ int main(int argc, char *argv[]) {
         maxIndex = temp;
   }
 
-  string finalMessage(maxIndex + 1, '*');
-
   strcpy(buffer, to_string(size).c_str());
 
   for (int i = 0; i < size; i++) {
@@ -144,6 +142,7 @@ int main(int argc, char *argv[]) {
   }
 
   // Add all the non-junk values to the final message
+  string finalMessage(maxIndex + 1, '*');
   for (auto &i : args)
     for (int j = 0; j < i->decMessage.size(); j++)
       if (i->decMessage[j] != '*')
