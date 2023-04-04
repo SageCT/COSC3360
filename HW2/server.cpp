@@ -47,7 +47,7 @@ int main(int argc, char *argv[]) {
   }
 
   // Create socket file descriptor and check for errors
-  if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
+  if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
     perror("socket failed");
     exit(EXIT_FAILURE);
   }
