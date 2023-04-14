@@ -1,0 +1,5 @@
+Symbol: C, Frequency : 3, Code: 0
+Symbol: B, Frequency : 1, Code: 100
+Symbol: D, Frequency : 2, Code: 101
+Symbol: A, Frequency : 3, Code: 11
+Original message: CACACADBD

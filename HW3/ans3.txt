@@ -1,0 +1,6 @@
+Symbol: A, Frequency : 8, Code: 0
+Symbol: E, Frequency : 6, Code: 10
+Symbol: U, Frequency : 1, Code: 1100
+Symbol: O, Frequency : 2, Code: 1101
+Symbol: I, Frequency : 4, Code: 111
+Original message: AAAAAAAAEEEEEEIIIIOOU

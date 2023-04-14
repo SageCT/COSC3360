@@ -193,17 +193,24 @@ void *decodeThreadMutex(void *arg) {
 
   pthread_mutex_lock(data->mutex);
 
+  // Find the correct node to decode the message
   for (char curr : data->codeVal->data)
     curr == '0' ? cu = cu->left : cu = cu->right;
 
-  pthread_cond_broadcast(data->waitTurn);
+  // Once you get the char from the decode, set the data at the given position
+  for (int position : data->codeVal->pos)
+    data->decMessage->at(position) = cu->data.at(0);
 
+  pthread_cond_broadcast(data->waitTurn);
+  pthread_mutex_unlock(data->mutex);
   //! End Critical Section !//
+
+  return nullptr;
 }
 
 void huffmanTree::decode(vector<shared_ptr<code>> &c, int type) {
   switch (type) {
-  case 0: {
+  case 1: {
     // Find the largest position to find the length of the final string
     int max = 0;
 
@@ -233,7 +240,7 @@ void huffmanTree::decode(vector<shared_ptr<code>> &c, int type) {
     decodedMessage = result;
   } break;
 
-  case 1: {
+  case 2: {
     int max = 0;
 
     for (int i = 0; i < c.size(); i++)
@@ -301,19 +308,48 @@ void huffmanTree::decode(vector<shared_ptr<code>> &c, int type) {
 
     decodedMessage = result;
   } break;
-  }
-}
 
-shared_ptr<node> huffmanTree::printInOrder(shared_ptr<node> &n, string c) {
-  if (!n)
-    return nullptr;
-  printInOrder(n->left, c + "0");
-  if (n->data != "\0") {
-    std::cout << "Symbol: " << n->data << ", Frequency: " << n->freq
-              << ", Code: " << c << endl;
+  default: {
+    // Find the largest position to find the length of the final string
+    int max = 0;
+
+    for (int i = 0; i < c.size(); i++)
+      for (int j = 0; j < c.at(i)->pos.size(); j++) {
+        if (max < c.at(i)->pos.at(j))
+          max = c.at(i)->pos.at(j);
+      }
+    string result(max + 1, '*');
+
+    for (int i = 0; i < c.size(); i++) {
+      string currCode = c.at(i)->data;
+      shared_ptr<node> cu(make_shared<node>(root));
+
+      for (auto curr : currCode) {
+        //* If current char is 0, go left
+        //* If current char is 1, go right
+        curr == '0' ? cu = cu->left : cu = cu->right;
+      }
+
+      // Once you get the char from the decode, set the data at the given
+      // position in the result string
+      for (int position : c.at(i)->pos) {
+        result.at(position) = cu->data.at(0);
+      }
+    }
+    decodedMessage = result;
+  } break;
   }
-  printInOrder(n->right, c + "1");
-  return n;
-}
+
+  shared_ptr<node> huffmanTree::printInOrder(shared_ptr<node> & n, string c) {
+    if (!n)
+      return nullptr;
+    printInOrder(n->left, c + "0");
+    if (n->data != "\0") {
+      std::cout << "Symbol: " << n->data << ", Frequency: " << n->freq
+                << ", Code: " << c << endl;
+    }
+    printInOrder(n->right, c + "1");
+    return n;
+  }
 
 #endif
