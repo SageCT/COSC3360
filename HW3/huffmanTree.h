@@ -42,6 +42,7 @@ struct code {
   code(string data, vector<int> pos) : data(data), pos(pos) {}
 };
 
+//* PA1 THREAD DATA STRUCT *//
 struct threadData {
   int numChars;
   shared_ptr<node> root;
@@ -52,15 +53,37 @@ struct threadData {
       : root(r), codeVal(c), numChars(nC), decMessage(dC) {}
 };
 
-struct socketThreadData {
-  code *codeVal;
-  char *hostname;
-  int portno;
-  vector<char> decMessage;
+//* PA2 THREAD DATA STRUCT *//
+// struct socketThreadData {
+//   code *codeVal;
+//   char *hostname;
+//   int portno;
+//   vector<char> decMessage;
+//
+//   socketThreadData(code *c, char *hn, int pn, vector<char> dC)
+//       : codeVal(c), hostname(hn), portno(pn), decMessage(dC) {}
+//   ~socketThreadData() { delete codeVal; }
+// };
 
-  socketThreadData(code *c, char *hn, int pn, vector<char> dC)
-      : codeVal(c), hostname(hn), portno(pn), decMessage(dC) {}
-  ~socketThreadData() { delete codeVal; }
+//* PA3 THREAD DATA STRUCT *//
+struct mutexThreadData {
+  shared_ptr<node> root;
+  shared_ptr<code> codeVal;
+  shared_ptr<vector<char>> decMessage;
+  pthread_mutex_t *mutex;
+  pthread_cond_t *waitTurn;
+  int turn;
+  int nThreads;
+  mutexThreadData(shared_ptr<node> r, shared_ptr<code> c,
+                  shared_ptr<vector<char>> dC, pthread_mutex_t *m,
+                  pthread_cond_t *wT, int t, int nT)
+      : root(r), codeVal(c), decMessage(dC), mutex(m), waitTurn(wT), turn(t),
+        nThreads(nT) {}
+
+  ~mutexThreadData() {
+    delete mutex;
+    delete waitTurn;
+  }
 };
 
 class huffmanCompare {
@@ -92,7 +115,7 @@ public:
   };
   void buildHuffmanTree(vector<shared_ptr<node>> &);
   shared_ptr<node> getRoot() const { return root; };
-  void decode(vector<shared_ptr<code>> &, bool threaded = false);
+  void decode(vector<shared_ptr<code>> &, int type = 0);
   void print(bool socket = false) {
     printInOrder(root);
     if (!socket)
@@ -122,8 +145,8 @@ void huffmanTree::buildHuffmanTree(vector<shared_ptr<node>> &n) {
     shared_ptr<node> right(pq.top());
     pq.pop();
 
-    // Create a new node with the sum of the frequencies of the two smaller
-    // nodes, this will be the "parent" node
+    //* Create a new node with the sum of the frequencies of the two smaller
+    //* nodes, this will be the "parent" node
     shared_ptr<node> parent(make_shared<node>(
         node("\0", left->freq + right->freq, nodeNum++, left, right)));
 
@@ -134,6 +157,7 @@ void huffmanTree::buildHuffmanTree(vector<shared_ptr<node>> &n) {
   }
 }
 
+//* PA2 DECODE VOID FUNCTION *//
 void *decodethread(void *ptr) {
   // Change the void pointer to a shared_ptr<code> pointer
   threadData *c = (threadData *)ptr;
@@ -142,8 +166,8 @@ void *decodethread(void *ptr) {
   string currCode = c->codeVal->data;
 
   for (char curr : currCode) {
-    // If current char is 0, go left
-    // If current char is 1, go right
+    //* If current char is 0, go left
+    //* If current char is 1, go right
     curr == '0' ? cu = cu->left : cu = cu->right;
   }
   //* Once you get the char from the decode, set the data at the given position
@@ -155,8 +179,61 @@ void *decodethread(void *ptr) {
   return nullptr;
 }
 
-void huffmanTree::decode(vector<shared_ptr<code>> &c, bool threaded) {
-  if (threaded) {
+//* PA3 DECODE VOID FUNCTION *//
+void *decodeThreadMutex(void *arg) {
+  mutexThreadData *data = (mutexThreadData *)arg;
+  shared_ptr<node> cu(data->root);
+  pthread_mutex_unlock(data->mutex);
+  pthread_mutex_lock(data->mutex);
+
+  while (data->turn != data->nThreads)
+    pthread_cond_wait(data->waitTurn, data->mutex);
+
+  pthread_mutex_unlock(data->mutex);
+
+  pthread_mutex_lock(data->mutex);
+
+  for (char curr : data->codeVal->data)
+    curr == '0' ? cu = cu->left : cu = cu->right;
+
+  pthread_cond_broadcast(data->waitTurn);
+
+  //! End Critical Section !//
+}
+
+void huffmanTree::decode(vector<shared_ptr<code>> &c, int type) {
+  switch (type) {
+  case 0: {
+    // Find the largest position to find the length of the final string
+    int max = 0;
+
+    for (int i = 0; i < c.size(); i++)
+      for (int j = 0; j < c.at(i)->pos.size(); j++) {
+        if (max < c.at(i)->pos.at(j))
+          max = c.at(i)->pos.at(j);
+      }
+    string result(max + 1, '*');
+
+    for (int i = 0; i < c.size(); i++) {
+      string currCode = c.at(i)->data;
+      shared_ptr<node> cu(make_shared<node>(root));
+
+      for (auto curr : currCode) {
+        //* If current char is 0, go left
+        //* If current char is 1, go right
+        curr == '0' ? cu = cu->left : cu = cu->right;
+      }
+
+      // Once you get the char from the decode, set the data at the given
+      // position in the result string
+      for (int position : c.at(i)->pos) {
+        result.at(position) = cu->data.at(0);
+      }
+    }
+    decodedMessage = result;
+  } break;
+
+  case 1: {
     int max = 0;
 
     for (int i = 0; i < c.size(); i++)
@@ -183,36 +260,47 @@ void huffmanTree::decode(vector<shared_ptr<code>> &c, bool threaded) {
       result += message->at(i);
 
     decodedMessage = result;
-  }
+  } break;
 
-  else {
-    // Find the largest position to find the length of the final string
+  case 3: {
     int max = 0;
 
     for (int i = 0; i < c.size(); i++)
-      for (int j = 0; j < c.at(i)->pos.size(); j++) {
+      for (int j = 0; j < c.at(i)->pos.size(); j++)
         if (max < c.at(i)->pos.at(j))
           max = c.at(i)->pos.at(j);
-      }
-    string result(max + 1, '*');
 
-    for (int i = 0; i < c.size(); i++) {
-      string currCode = c.at(i)->data;
-      shared_ptr<node> cu(make_shared<node>(root));
+    string result = "";
+    static vector<pthread_t> threads;
+    shared_ptr<vector<char>> message(
+        make_shared<vector<char>>(vector<char>(max + 1)));
 
-      for (auto curr : currCode) {
-        // If current char is 0, go left
-        // If current char is 1, go right
-        curr == '0' ? cu = cu->left : cu = cu->right;
-      }
+    //* Create mutex and initalize
+    pthread_mutex_t *mutex;
+    pthread_mutex_init(mutex, nullptr);
 
-      // Once you get the char from the decode, set the data at the given
-      // position in the result string
-      for (int position : c.at(i)->pos) {
-        result.at(position) = cu->data.at(0);
-      }
+    int nThreads = 0;
+
+    for (auto i : c) {
+      pthread_cond_t *waitTurn;
+      int turn = 0;
+      mutexThreadData *arg = new mutexThreadData(root, i, message, mutex,
+                                                 waitTurn, turn, nThreads++);
+      pthread_t thread;
+      pthread_mutex_lock(mutex);
+      //! Start Critical Section !//
+      pthread_create(&thread, nullptr, decodeThreadMutex, &arg);
+      threads.push_back(thread);
     }
+
+    for (auto &i : threads)
+      pthread_join(i, nullptr);
+
+    for (int i = 0; i < message->size(); i++)
+      result += message->at(i);
+
     decodedMessage = result;
+  } break;
   }
 }
 

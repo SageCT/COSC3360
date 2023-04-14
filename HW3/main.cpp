@@ -7,9 +7,9 @@ using namespace std;
 int main() {
   string in, toAdd;
   int counter = 0;
-  // struct with the codes and their positions in a vector of ints
+  //* struct with the codes and their positions in a vector of ints
   vector<shared_ptr<code>> codes;
-  // vector with the characters and their frequencies
+  //* vector with the characters and their frequencies
   vector<shared_ptr<node>> freq;
 
   string inputFileName, compressedFileName;
@@ -62,9 +62,9 @@ int main() {
 
   compressedFile.close();
 
-  // Create and print the Huffman Tree
+  //* Create and print the Huffman Tree
   huffmanTree tree(freq);
-  tree.decode(codes, true);
+  tree.decode(codes, 3);
   tree.print();
   return 0;
 }
