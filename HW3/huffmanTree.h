@@ -68,13 +68,13 @@ struct threadData {
 //* PA3 THREAD DATA STRUCT *//
 struct mutexThreadData {
   shared_ptr<node> root;
-  shared_ptr<code> codeVal;
+  vector<shared_ptr<code>> codeVals;
   shared_ptr<vector<char>> decMessage;
   pthread_mutex_t *mutex;
   pthread_cond_t *waitTurn;
   int turn;
   int nThreads;
-  mutexThreadData(shared_ptr<node> r, shared_ptr<code> c,
+  mutexThreadData(shared_ptr<node> r, vector<shared_ptr<code>> c,
                   shared_ptr<vector<char>> dC, pthread_mutex_t *m,
                   pthread_cond_t *wT, int t, int nT)
       : root(r), codeVal(c), decMessage(dC), mutex(m), waitTurn(wT), turn(t),
@@ -184,6 +184,10 @@ void *decodeThreadMutex(void *arg) {
   mutexThreadData *data = (mutexThreadData *)arg;
   shared_ptr<node> cu(data->root);
   pthread_mutex_unlock(data->mutex);
+  data->waitTurn = new pthread_cond_t;
+
+  //! Critical Section !//
+
   pthread_mutex_lock(data->mutex);
 
   while (data->turn != data->nThreads)
@@ -283,18 +287,20 @@ void huffmanTree::decode(vector<shared_ptr<code>> &c, int type) {
         make_shared<vector<char>>(vector<char>(max + 1)));
 
     //* Create mutex and initalize
-    pthread_mutex_t *mutex;
-    pthread_mutex_init(mutex, nullptr);
+    static pthread_mutex_t mutex;
+    pthread_mutex_init(&mutex, nullptr);
 
-    int nThreads = 0;
+    //* Create condition variable and initalize
+    static pthread_cond_t waitTurn = PTHREAD_COND_INITIALIZER;
+
+    int nThreads = c.size();
+    int turn = 0;
 
     for (auto i : c) {
-      pthread_cond_t *waitTurn;
-      int turn = 0;
-      mutexThreadData *arg = new mutexThreadData(root, i, message, mutex,
-                                                 waitTurn, turn, nThreads++);
+      mutexThreadData *arg = new mutexThreadData(root, i, message, &mutex,
+                                                 &waitTurn, turn, nThreads++);
       pthread_t thread;
-      pthread_mutex_lock(mutex);
+      pthread_mutex_lock(&mutex);
       //! Start Critical Section !//
       pthread_create(&thread, nullptr, decodeThreadMutex, &arg);
       threads.push_back(thread);
@@ -302,6 +308,8 @@ void huffmanTree::decode(vector<shared_ptr<code>> &c, int type) {
 
     for (auto &i : threads)
       pthread_join(i, nullptr);
+
+    pthread_mutex_destroy(&mutex);
 
     for (int i = 0; i < message->size(); i++)
       result += message->at(i);
@@ -339,17 +347,18 @@ void huffmanTree::decode(vector<shared_ptr<code>> &c, int type) {
     decodedMessage = result;
   } break;
   }
+}
 
-  shared_ptr<node> huffmanTree::printInOrder(shared_ptr<node> & n, string c) {
-    if (!n)
-      return nullptr;
-    printInOrder(n->left, c + "0");
-    if (n->data != "\0") {
-      std::cout << "Symbol: " << n->data << ", Frequency: " << n->freq
-                << ", Code: " << c << endl;
-    }
-    printInOrder(n->right, c + "1");
-    return n;
+shared_ptr<node> huffmanTree::printInOrder(shared_ptr<node> &n, string c) {
+  if (!n)
+    return nullptr;
+  printInOrder(n->left, c + "0");
+  if (n->data != "\0") {
+    std::cout << "Symbol: " << n->data << ", Frequency: " << n->freq
+              << ", Code: " << c << endl;
   }
+  printInOrder(n->right, c + "1");
+  return n;
+}
 
 #endif
