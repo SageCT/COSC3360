@@ -12,18 +12,22 @@ int main() {
   //* vector with the characters and their frequencies
   vector<shared_ptr<node>> freq;
 
-  string inputFileName, compressedFileName;
+  // string inputFileName, compressedFileName;
   // cin >> inputFileName >> compressedFileName;
 
-  inputFileName = "input2.txt";
-  compressedFileName = "comp2.txt";
+  // inputFileName = "input2.txt";
+  // compressedFileName = "comp2.txt";
 
-  ifstream inputFile(inputFileName), compressedFile(compressedFileName);
+  // ifstream inputFile(inputFileName), compressedFile(compressedFileName);
 
   // Gets line from inputFile, and checks if the first character is a digit,
   // if not a digit adds to a vector of nodes
-  int nodeNum = 0;
-  while (getline(inputFile, in)) {
+  int nodeNum = 0, lineNum = 0;
+  cin >> lineNum;
+  cin.ignore();
+  for (int i = 0; i < lineNum; i++) {
+    getline(cin, in);
+
     string temp = "";
     temp += in.at(2);
     // Make node and push to vector
@@ -34,9 +38,8 @@ int main() {
   sort(freq.begin(), freq.end(), huffmanCompare());
   reverse(freq.begin(), freq.end());
 
-  inputFile.close();
-
-  while (getline(compressedFile, in)) {
+  for (int i = 0; i < lineNum; i++) {
+    getline(cin, in);
     if (counter > 0 && isdigit(in.at(0))) {
       toAdd = "";
       vector<int> temp;
@@ -59,12 +62,9 @@ int main() {
         break;
     }
   }
-
-  compressedFile.close();
-
   //* Create and print the Huffman Tree
   huffmanTree tree(freq);
   tree.decode(codes, 3);
-  tree.print();
+  // tree.print();
   return 0;
 }

@@ -217,6 +217,9 @@ void *decodeThreadMutex(void *arg) {
     localData.decMessage->at(position) = cu->data.at(0);
   (*localData.turn)++;
 
+  std::cout << "Symbol: " << cu->data << ", Frequency: " << cu->freq
+            << ", Code: " << localData.codeVals.at(currThread)->data << endl;
+
   // Once you get the char from the decode, set the data at the given position
 
   pthread_cond_broadcast(localData.waitTurn);
@@ -342,6 +345,7 @@ void huffmanTree::decode(vector<shared_ptr<code>> &c, int progAssign) {
       result += arg->decMessage->at(i);
 
     decodedMessage = result;
+    cout << "Original message: " << decodedMessage << endl;
   } break;
 
   default: {
