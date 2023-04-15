@@ -88,5 +88,6 @@
     "valarray": "cpp",
     "variant": "cpp"
   },
-  "cmake.sourceDirectory": "/mnt/c/Users/hgt65/repos/COSC3360/HW1"
+  "cmake.sourceDirectory": "/mnt/c/Users/hgt65/repos/COSC3360/HW1",
+  "cmake.configureOnOpen": false
 }

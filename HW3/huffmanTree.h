@@ -67,23 +67,31 @@ struct threadData {
 
 //* PA3 THREAD DATA STRUCT *//
 struct mutexThreadData {
-  shared_ptr<node> root;
+  node *root;
   vector<shared_ptr<code>> codeVals;
   shared_ptr<vector<char>> decMessage;
   pthread_mutex_t *mutex;
   pthread_cond_t *waitTurn;
-  int turn;
+  int *turn;
   int nThreads;
-  mutexThreadData(shared_ptr<node> r, vector<shared_ptr<code>> c,
+  mutexThreadData(node *r, vector<shared_ptr<code>> c,
                   shared_ptr<vector<char>> dC, pthread_mutex_t *m,
-                  pthread_cond_t *wT, int t, int nT)
-      : root(r), codeVal(c), decMessage(dC), mutex(m), waitTurn(wT), turn(t),
+                  pthread_cond_t *wT, int *t, int nT)
+      : root(r), codeVals(c), decMessage(dC), mutex(m), waitTurn(wT), turn(t),
         nThreads(nT) {}
 
-  ~mutexThreadData() {
-    delete mutex;
-    delete waitTurn;
+  mutexThreadData() {
+    root = nullptr;
+    mutex = nullptr;
+    waitTurn = nullptr;
+    turn = nullptr;
+    nThreads = 0;
   }
+
+  // ~mutexThreadData() {
+  //   delete mutex;
+  //   delete waitTurn;
+  // }
 };
 
 class huffmanCompare {
@@ -106,8 +114,6 @@ private:
   shared_ptr<node> root;
   string decodedMessage;
 
-  shared_ptr<node> printInOrder(shared_ptr<node> &, string = "");
-
 public:
   huffmanTree() : root(nullptr) {}
   huffmanTree(vector<shared_ptr<node>> &n) : nodes(n), root(nullptr) {
@@ -116,6 +122,7 @@ public:
   void buildHuffmanTree(vector<shared_ptr<node>> &);
   shared_ptr<node> getRoot() const { return root; };
   void decode(vector<shared_ptr<code>> &, int type = 0);
+  shared_ptr<node> printInOrder(shared_ptr<node> &, string = "");
   void print(bool socket = false) {
     printInOrder(root);
     if (!socket)
@@ -181,39 +188,47 @@ void *decodethread(void *ptr) {
 
 //* PA3 DECODE VOID FUNCTION *//
 void *decodeThreadMutex(void *arg) {
+
   mutexThreadData *data = (mutexThreadData *)arg;
-  shared_ptr<node> cu(data->root);
-  pthread_mutex_unlock(data->mutex);
-  data->waitTurn = new pthread_cond_t;
 
-  //! Critical Section !//
+  mutexThreadData localData = *data;
 
-  pthread_mutex_lock(data->mutex);
+  pthread_mutex_unlock(localData.mutex);
 
-  while (data->turn != data->nThreads)
-    pthread_cond_wait(data->waitTurn, data->mutex);
+  //! Start Critical Section !//
 
-  pthread_mutex_unlock(data->mutex);
+  pthread_mutex_lock(localData.mutex);
 
-  pthread_mutex_lock(data->mutex);
+  while (*localData.turn != localData.nThreads)
+    pthread_cond_wait(localData.waitTurn, localData.mutex);
+
+  pthread_mutex_unlock(localData.mutex);
+
+  int currThread = localData.nThreads;
+  node *cu = localData.root;
 
   // Find the correct node to decode the message
-  for (char curr : data->codeVal->data)
-    curr == '0' ? cu = cu->left : cu = cu->right;
+  for (char curr : localData.codeVals.at(currThread)->data)
+    curr == '0' ? cu = cu->left.get() : cu = cu->right.get();
+
+  pthread_mutex_lock(localData.mutex);
+
+  for (int position : localData.codeVals.at(currThread)->pos)
+    localData.decMessage->at(position) = cu->data.at(0);
+  (*localData.turn)++;
 
   // Once you get the char from the decode, set the data at the given position
-  for (int position : data->codeVal->pos)
-    data->decMessage->at(position) = cu->data.at(0);
 
-  pthread_cond_broadcast(data->waitTurn);
-  pthread_mutex_unlock(data->mutex);
+  pthread_cond_broadcast(localData.waitTurn);
+  pthread_mutex_unlock(localData.mutex);
+
   //! End Critical Section !//
 
   return nullptr;
 }
 
-void huffmanTree::decode(vector<shared_ptr<code>> &c, int type) {
-  switch (type) {
+void huffmanTree::decode(vector<shared_ptr<code>> &c, int progAssign) {
+  switch (progAssign) {
   case 1: {
     // Find the largest position to find the length of the final string
     int max = 0;
@@ -237,9 +252,8 @@ void huffmanTree::decode(vector<shared_ptr<code>> &c, int type) {
 
       // Once you get the char from the decode, set the data at the given
       // position in the result string
-      for (int position : c.at(i)->pos) {
+      for (int position : c.at(i)->pos)
         result.at(position) = cu->data.at(0);
-      }
     }
     decodedMessage = result;
   } break;
@@ -254,7 +268,7 @@ void huffmanTree::decode(vector<shared_ptr<code>> &c, int type) {
 
     string result = "";
     static vector<pthread_t> threads;
-    shared_ptr<vector<char>> message(
+    static shared_ptr<vector<char>> message(
         make_shared<vector<char>>(vector<char>(max + 1)));
 
     for (auto i : c) {
@@ -282,9 +296,13 @@ void huffmanTree::decode(vector<shared_ptr<code>> &c, int type) {
           max = c.at(i)->pos.at(j);
 
     string result = "";
-    static vector<pthread_t> threads;
-    shared_ptr<vector<char>> message(
+    vector<pthread_t> threads;
+    static shared_ptr<vector<char>> message(
         make_shared<vector<char>>(vector<char>(max + 1)));
+
+    for (int i = 0; i < max + 1; i++) {
+      message->at(i) = '*';
+    }
 
     //* Create mutex and initalize
     static pthread_mutex_t mutex;
@@ -296,13 +314,22 @@ void huffmanTree::decode(vector<shared_ptr<code>> &c, int type) {
     int nThreads = c.size();
     int turn = 0;
 
-    for (auto i : c) {
-      mutexThreadData *arg = new mutexThreadData(root, i, message, &mutex,
-                                                 &waitTurn, turn, nThreads++);
-      pthread_t thread;
+    mutexThreadData *arg = new mutexThreadData;
+
+    for (int i = 0; i < c.size(); i++) {
+
       pthread_mutex_lock(&mutex);
       //! Start Critical Section !//
-      pthread_create(&thread, nullptr, decodeThreadMutex, &arg);
+      pthread_t thread;
+      arg->root = root.get();
+      arg->codeVals = c;
+      arg->decMessage = message;
+      arg->mutex = &mutex;
+      arg->waitTurn = &waitTurn;
+      arg->nThreads = i;
+      arg->turn = &turn;
+
+      pthread_create(&thread, nullptr, decodeThreadMutex, arg);
       threads.push_back(thread);
     }
 
@@ -311,8 +338,8 @@ void huffmanTree::decode(vector<shared_ptr<code>> &c, int type) {
 
     pthread_mutex_destroy(&mutex);
 
-    for (int i = 0; i < message->size(); i++)
-      result += message->at(i);
+    for (int i = 0; i < arg->decMessage->size(); i++)
+      result += arg->decMessage->at(i);
 
     decodedMessage = result;
   } break;

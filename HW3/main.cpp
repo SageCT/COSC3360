@@ -15,8 +15,8 @@ int main() {
   string inputFileName, compressedFileName;
   // cin >> inputFileName >> compressedFileName;
 
-  inputFileName = "input1.txt";
-  compressedFileName = "comp1.txt";
+  inputFileName = "input2.txt";
+  compressedFileName = "comp2.txt";
 
   ifstream inputFile(inputFileName), compressedFile(compressedFileName);
 
