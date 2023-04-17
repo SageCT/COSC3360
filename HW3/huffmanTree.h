@@ -87,11 +87,6 @@ struct mutexThreadData {
     turn = nullptr;
     nThreads = 0;
   }
-
-  // ~mutexThreadData() {
-  //   delete mutex;
-  //   delete waitTurn;
-  // }
 };
 
 class huffmanCompare {
@@ -119,15 +114,16 @@ public:
   huffmanTree(vector<shared_ptr<node>> &n) : nodes(n), root(nullptr) {
     buildHuffmanTree(n);
   };
+
   void buildHuffmanTree(vector<shared_ptr<node>> &);
   shared_ptr<node> getRoot() const { return root; };
   void decode(vector<shared_ptr<code>> &, int type = 0);
-  shared_ptr<node> printInOrder(shared_ptr<node> &, string = "");
-  void print(bool socket = false) {
-    printInOrder(root);
-    if (!socket)
-      std::cout << "Original message: " << decodedMessage << std::endl;
-  };
+  // shared_ptr<node> printInOrder(shared_ptr<node> &, string = "");
+  // void print(bool socket = false) {
+  //   printInOrder(root);
+  //   if (!socket)
+  //     std::cout << "Original message: " << decodedMessage << std::endl;
+  // };
 };
 
 void huffmanTree::buildHuffmanTree(vector<shared_ptr<node>> &n) {
@@ -190,19 +186,19 @@ void *decodethread(void *ptr) {
 void *decodeThreadMutex(void *arg) {
 
   mutexThreadData *data = (mutexThreadData *)arg;
-
   mutexThreadData localData = *data;
 
   pthread_mutex_unlock(localData.mutex);
-
-  //! Start Critical Section !//
+  //! End Critical Section 1 !//
 
   pthread_mutex_lock(localData.mutex);
+  //! Start Critical Section 2 !//
 
   while (*localData.turn != localData.nThreads)
     pthread_cond_wait(localData.waitTurn, localData.mutex);
 
   pthread_mutex_unlock(localData.mutex);
+  //! End Critical Section 2 !//
 
   int currThread = localData.nThreads;
   node *cu = localData.root;
@@ -212,20 +208,21 @@ void *decodeThreadMutex(void *arg) {
     curr == '0' ? cu = cu->left.get() : cu = cu->right.get();
 
   pthread_mutex_lock(localData.mutex);
+  //! Start Critical Section 3 !//
 
+  // Once you get the char from the decode, set the data at the given position
+  // in the shared string
   for (int position : localData.codeVals.at(currThread)->pos)
     localData.decMessage->at(position) = cu->data.at(0);
   (*localData.turn)++;
 
   std::cout << "Symbol: " << cu->data << ", Frequency: " << cu->freq
-            << ", Code: " << localData.codeVals.at(currThread)->data << endl;
-
-  // Once you get the char from the decode, set the data at the given position
+            << ", Code: " << localData.codeVals.at(currThread)->data
+            << std::endl;
 
   pthread_cond_broadcast(localData.waitTurn);
   pthread_mutex_unlock(localData.mutex);
-
-  //! End Critical Section !//
+  //! End Critical Section 3 !//
 
   return nullptr;
 }
@@ -322,7 +319,7 @@ void huffmanTree::decode(vector<shared_ptr<code>> &c, int progAssign) {
     for (int i = 0; i < c.size(); i++) {
 
       pthread_mutex_lock(&mutex);
-      //! Start Critical Section !//
+      //! Start Critical Section 1 !//
       pthread_t thread;
       arg->root = root.get();
       arg->codeVals = c;
@@ -344,8 +341,7 @@ void huffmanTree::decode(vector<shared_ptr<code>> &c, int progAssign) {
     for (int i = 0; i < arg->decMessage->size(); i++)
       result += arg->decMessage->at(i);
 
-    decodedMessage = result;
-    cout << "Original message: " << decodedMessage << endl;
+    cout << "Original message: " << result << endl;
   } break;
 
   default: {
@@ -380,16 +376,16 @@ void huffmanTree::decode(vector<shared_ptr<code>> &c, int progAssign) {
   }
 }
 
-shared_ptr<node> huffmanTree::printInOrder(shared_ptr<node> &n, string c) {
-  if (!n)
-    return nullptr;
-  printInOrder(n->left, c + "0");
-  if (n->data != "\0") {
-    std::cout << "Symbol: " << n->data << ", Frequency: " << n->freq
-              << ", Code: " << c << endl;
-  }
-  printInOrder(n->right, c + "1");
-  return n;
-}
+// shared_ptr<node> huffmanTree::printInOrder(shared_ptr<node> &n, string c) {
+//   if (!n)
+//     return nullptr;
+//   printInOrder(n->left, c + "0");
+//   if (n->data != "\0") {
+//     std::cout << "Symbol: " << n->data << ", Frequency: " << n->freq
+//               << ", Code: " << c << endl;
+//   }
+//   printInOrder(n->right, c + "1");
+//   return n;
+// }
 
 #endif

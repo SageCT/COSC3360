@@ -1,51 +1,77 @@
+#include <cmath>
+#include <fcntl.h>
 #include <iostream>
-#include <netdb.h>
-#include <netinet/in.h>
 #include <pthread.h>
-#include <sstream>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <string>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <unistd.h>
-
-#include "huffmanTree.h"
-
 using namespace std;
 
-struct ThreadArgs {
-  int id;
-  pthread_cond_t *waitTurn;
-  pthread_mutex_t *mutex;
-};
+static pthread_mutex_t bsem; // Mutex semaphore
+static pthread_cond_t waitTurn =
+    PTHREAD_COND_INITIALIZER; // Condition variable to control the turn
+static int turn;              // Index to control access to the turn array
+static int maxEvenThread;
 
-void *addOneHundred(void *id) {
-  int *id_ = (int *)id;
-  for (int i = 0; i < 100; i++)
-    cout << *id_ << " " << i << endl;
-}
+void *printEvenOdd(void *void_ptr_argv) {
 
-void addOneHundred(int id, pthread_mutex_t &mutex) {
-  for (int i = 0; i < 100; i++) {
-    cout << id << " " << i << endl;
+  int num = *(int *)void_ptr_argv;
+
+  pthread_mutex_lock(&bsem);
+
+  while (num != turn) {
+    pthread_cond_wait(&waitTurn, &bsem);
   }
+
+  pthread_mutex_unlock(&bsem);
+
+  cout << "I am child thread " << num << endl;
+
+  pthread_mutex_lock(&bsem);
+
+  if (num != maxEvenThread) {
+    turn += 2;
+  } else {
+    turn = 1;
+  }
+  pthread_cond_broadcast(&waitTurn);
+  pthread_mutex_unlock(&bsem);
+
+  return nullptr;
 }
 
 int main() {
-  pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+  int nThreads;
+  std::cin >> nThreads; // number of Threads from STDIN
 
-  int one = 1, two = 2;
-  pthread_mutex_t mutex;
+  pthread_mutex_init(&bsem, NULL); // Initialize bsem to 1
 
-  pthread_t t1, t2;
-  ThreadArgs *args1 = new ThreadArgs;
-  args1->id = 1;
-  args1->mutex = &mutex;
+  pthread_t *tid = new pthread_t[nThreads];
+  int *threadNumber = new int[nThreads];
+  turn = 0; // initialize the turn here
 
-  pthread_create(&t1, NULL, addOneHundred, (void *)&args1);
+  // Determine the max thread number for even threads
+  if ((nThreads - 1) % 2 == 0)
+    maxEvenThread = nThreads - 1;
+  else
+    maxEvenThread = nThreads - 2;
 
+  for (int i = 0; i < nThreads; i++) {
+
+    threadNumber[i] =
+        i; // initialize the thread number here (remember to follow the rules
+           // from the specifications of the assignment)
+    // call pthread_create here
+    if (pthread_create(&tid[i], NULL, printEvenOdd, &threadNumber[i])) {
+      cerr << "Error" << endl;
+      exit(1);
+    }
+  }
+  // Call pthread_join
+  for (int i = 0; i < nThreads; i++) {
+    pthread_join(tid[i], NULL);
+  }
+
+  delete[] threadNumber;
+  delete[] tid;
   return 0;
 }
