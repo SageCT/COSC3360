@@ -1,203 +1,152 @@
-#include <iostream>
-#include <thread>
-#include <fstream>
-#include <sstream>
-#include <string>
-#include <vector>
-#include <pthread.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <fcntl.h>
-#include <cmath>
-#include <algorithm>
-
-//this one looks stable, could work, just add waitTurn
 #include "huffmanTree.h"
+#include <fcntl.h>
+#include <fstream>
+#include <iostream>
+#include <pthread.h>
+#include <sstream>
+#include <stdlib.h>
+#include <string>
+#include <sys/wait.h>
+#include <unistd.h>
+#include <vector>
+
 using namespace std;
+char getChar(string in) {
+  char fixed = in[0];
+  return fixed;
+}
+int getNum(string in) {
+  int num;
+  num = stoi(in.substr(2));
+  return num;
+}
+struct args {
+  char symbol;
+  string bcode;
+  int turn;
+  int tnum;
+  vector<int> positions;
+  vector<char> *message;
+  pthread_mutex_t *bsem;
+  pthread_cond_t *waitTurn;
 
-//struct for threading
-template <class T>
-struct thread_struct {
-    PNode<T> *root;
-    string line;
-    int turn = 0;
-    pthread_mutex_t *bsem;
-    pthread_cond_t *waitTurn;
-    vector<pair<int, char> > list;// char with their position in the string
+  args() {
+    symbol = '0';
+    bcode = "";
+    turn = 0;
+    tnum = 0;
+    positions = {0};
+    bsem = nullptr;
+    waitTurn = nullptr;
+  }
 };
+void *decodemssg(void *pos_void_ptr) {
+  args *pos_ptr = (struct args *)pos_void_ptr;
 
-// Function prototypes
-vector<string> getPos(string input);
+  vector<int> temppos = pos_ptr->positions;
+  int indext = pos_ptr->tnum;
+  string tempbcode = pos_ptr->bcode;
+  char tempsymb = pos_ptr->symbol;
 
-template <class T>
-char getChar(PNode<T> *node, string path, int index);
+  while (indext != pos_ptr->turn) {
+    pthread_cond_wait(pos_ptr->waitTurn, pos_ptr->bsem);
+  }
+  pthread_mutex_unlock(pos_ptr->bsem);
 
-template <class T>
-int getFreq(PNode<T> *node, string path, int index);
+  for (int i = 0; i < pos_ptr->positions.size(); i++) {
+    (*pos_ptr->message)[temppos[i]] = tempsymb;
+  }
 
-template <class T>
-void *decode(void *thread_arg) {
-    thread_struct<T> *thread_point = (thread_struct<T> *)thread_arg;
+  cout << "Symbol: " << pos_ptr->symbol
+       << ", Frequency: " << pos_ptr->positions.size()
+       << ", Code: " << pos_ptr->bcode << endl;
 
-    vector<string> posNum = getPos(thread_point->line);
-    char dataChar = getChar(thread_point->root, posNum[0], 0);
-    int Freq = getFreq(thread_point->root, posNum[0], 0);
-
-    int turn = thread_point->turn;
-    while (turn != thread_point->turn) {
-        pthread_cond_wait(thread_point->waitTurn, thread_point->bsem);
-    }
-    pthread_mutex_unlock(thread_point->bsem);
-    pthread_mutex_lock(thread_point->bsem);
-    cout << "Symbol: " << dataChar << ", Frequency: " << Freq << ", Code: " << posNum[0] << endl;
-    thread_point->turn += 1;
-    pthread_cond_broadcast(thread_point->waitTurn);
-    pthread_mutex_unlock(thread_point->bsem);
-
-    for (int i = 1; i < posNum.size(); i++) {
-        int n = stoi(posNum[i]);
-        thread_point->list.push_back(make_pair(n, dataChar));
-    }
-    return (NULL);
+  pthread_mutex_lock(pos_ptr->bsem);
+  (pos_ptr->turn)++;
+  pthread_cond_broadcast(pos_ptr->waitTurn);
+  pthread_mutex_unlock(pos_ptr->bsem);
+  return nullptr;
 }
 
+int main() {
+  string infile, line, binaryc, empt = "", temp_pos;
+  char letr, letter;
+  int totalsymb = 0, letpr = 0, freq = 0, size = 0, cmpsize = 0;
+  vector<int> freqc;  // frequency vector
+  vector<char> inltr; // character vector
+  huffmantree *root;
+  getline(cin, line);
+  totalsymb = stoi(line); // use totalsymb as the for loop iterator
+  // cout << totalsymb << endl;
 
-int main(int argc, char** argv){
-    string fileName, commandName;
-    string inputString, inputCommand;
-    int arr_size=0, num_threads=0;
+  for (int i = 0; i < totalsymb; i++) {
+    getline(cin, line);
+    letr = getChar(line);
+    letpr = getNum(line);
+    // cout << "Letter " << letr << " Frequency " << letpr << endl;
+    freq = freq + letpr;
+    freqc.push_back(letpr);
+    inltr.push_back(letr);
+  }
 
-    //getting first size number input from files
-    string size_num="";
-    cin >> size_num;
-    cin.ignore();
+  size = inltr.size();
+  HuffmanCodes(inltr, freqc, size);
 
-    //number version of size_num
-    int num = stoi(size_num);
+  // vector for args and threads
+  args argst;
+  int turn = 0;
+  static pthread_mutex_t bsem;
+  pthread_mutex_init(&bsem, NULL);
+  static pthread_cond_t waitTurn_ = PTHREAD_COND_INITIALIZER;
+  int tnum = totalsymb;
 
-    //n for while loop increment
-    int n=0;
+  vector<pthread_t> tid;
+  // vector <pthread_t> temptid;
+  // int *threadNumber = new int[totalsymb];
 
-    //getting input from input file and push into huffmanTree
-    prio_queue<char> pq;
-    while(getline(cin, inputString)){
-        pq.enqueue(inputString[0], stoi(inputString.substr(2, inputString.size() - 1)));
-        arr_size += stoi(inputString.substr(2, inputString.size() - 1));// getting original message size
-        
-        if(n == num-1){
-            break;
-        }
-        n++;
+  root = getRoot(inltr, freqc, size);
+  vector<char> finalmsg(root->freq);
+  vector<int> positions;
+
+  // pthread_mutex_init(&bsem, NULL);
+
+  for (int i = 0; i < totalsymb; i++) {
+    getline(cin, line);
+    pthread_t newthread;
+    // threadNumber[i] = i;
+    // cout << line << endl;
+    istringstream iss(line);
+    iss >> binaryc;
+
+    // vector<char> *msg(root->freq);
+    positions.clear();
+    letter = findLetter(root, binaryc, empt, letter);
+    while (iss >> temp_pos) {
+      int post;
+      post = stoi(temp_pos);
+      positions.push_back(post);
     }
+    pthread_mutex_lock(&bsem);
 
-    //processing tree
-    pq.process();
+    argst.positions = positions;
+    argst.symbol = letter;
+    argst.message = &finalmsg;
+    argst.bcode = binaryc;
+    argst.waitTurn = &waitTurn_;
+    argst.bsem = &bsem;
+    argst.tnum = i;
 
-    // Initialize bsem mutex
-    pthread_mutex_t bsem;
-    pthread_mutex_init(&bsem, NULL);
-    pthread_cond_t waitTurn = PTHREAD_COND_INITIALIZER;
+    // cout << argst.symbol << endl;
+    pthread_create(&newthread, NULL, decodemssg, &argst);
+    tid.push_back(newthread);
 
-    // Create and initialize thread_struct
-    thread_struct<char> *thread_data = new thread_struct<char>();
-    thread_data->bsem = &bsem;
-    thread_data->waitTurn = &waitTurn;
-
-    // Create and initialize threads vector
-    vector<pthread_t> threads;
-
-    //reset n
-    n=0;
-
-    //create turn;
-    int turn = 0;
-
-    //getting input from command file with multiple threads, every input will have a dedicated thread
-    while(getline(cin, inputCommand)){
-        num_threads+=1;
-
-        pthread_t thread;
-
-        pthread_mutex_lock(&bsem);
-
-        thread_data->line = inputCommand;
-        thread_data->turn = turn;
-        thread_data->root = pq.getFront();
-        turn++;
-        
-        pthread_create(&thread, NULL, &decode<char>, (void*)thread_data);
-        threads.push_back(thread);
-
-        if(n == num-1){
-            break;
-        }
-        n++;
-        // turn++;// note this
-    }
-
-    //joining threads
-    for (int i = 0; i < threads.size(); i++) {
-        pthread_join(threads[i], NULL);
-    }
-
-    // Sort the list
-    sort(thread_data->list.begin(), thread_data->list.end());
-
-    //printing out the original message
-    cout<<"Original message: ";
-    for (int i = 0; i < arr_size; i++) {
-        cout << thread_data->list[i].second;
-    }
-
-    // Free the memory for thread_data
-    delete thread_data;
-
-    return 0;
+    // args* newargs = new args(letter, positions, msg, binaryc);
+  }
+  for (int i = 0; i < size; i++) {
+    pthread_join(tid[i], NULL);
+  }
+  cout << "Original message: ";
+  for (int i = 0; i < finalmsg.size(); i++) {
+    cout << finalmsg[i];
+  }
 }
-
-//getting position from string
-vector<string> getPos(string input){
-    vector<string> result;
-    string s;
-    stringstream ss(input);
-    while(getline(ss, s, ' ')){
-        result.push_back(s);
-    }
-    return result;
-}
-
-template <class T>
-char getChar(PNode<T> *node, string path, int index) {
-    if (path.empty()) {
-        return '\0';
-    }
-    if (index == path.length()) {
-        return node->data;
-    }
-    if (path[index] == '0') {
-        return getChar(node->left, path, index + 1);
-    }
-    else if (path[index] == '1') {
-        return getChar(node->right, path, index + 1);
-    }
-    return '\0';
-}
-
-template <class T>
-int getFreq(PNode<T> *node, string path, int index) {
-    if (path.empty()) {
-        return 0;
-    }
-    if (index == path.length()) {
-        return node->prio;
-    }
-    if (path[index] == '0') {
-        return getFreq(node->left, path, index + 1);
-    }
-    else if (path[index] == '1') {
-        return getFreq(node->right, path, index + 1);
-    }
-    return 0;
-}
-
