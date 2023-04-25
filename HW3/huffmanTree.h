@@ -71,18 +71,20 @@ struct mutexThreadData {
   vector<shared_ptr<code>> codeVals;
   shared_ptr<vector<char>> decMessage;
   pthread_mutex_t *mutex;
+  pthread_mutex_t *turnMutex;
   pthread_cond_t *waitTurn;
   int *turn;
   int nThreads;
   mutexThreadData(node *r, vector<shared_ptr<code>> c,
                   shared_ptr<vector<char>> dC, pthread_mutex_t *m,
-                  pthread_cond_t *wT, int *t, int nT)
-      : root(r), codeVals(c), decMessage(dC), mutex(m), waitTurn(wT), turn(t),
-        nThreads(nT) {}
+                  pthread_mutex_t *tM, pthread_cond_t *wT, int *t, int nT)
+      : root(r), codeVals(c), decMessage(dC), mutex(m), turnMutex(tM),
+        waitTurn(wT), turn(t), nThreads(nT) {}
 
   mutexThreadData() {
     root = nullptr;
     mutex = nullptr;
+    turnMutex = nullptr;
     waitTurn = nullptr;
     turn = nullptr;
     nThreads = 0;
@@ -191,14 +193,14 @@ void *decodeThreadMutex(void *arg) {
   pthread_mutex_unlock(localData.mutex);
   //! End Critical Section 1 !//
 
-  pthread_mutex_lock(localData.mutex);
-  //! Start Critical Section 2 !//
+  pthread_mutex_lock(localData.turnMutex);
+  //! Start Critical Section 2 (Diff mutex) !//
 
   while (*localData.turn != localData.nThreads)
     pthread_cond_wait(localData.waitTurn, localData.mutex);
 
-  pthread_mutex_unlock(localData.mutex);
-  //! End Critical Section 2 !//
+  pthread_mutex_unlock(localData.turnMutex);
+  //! End Critical Section 2 (Diff mutex) !//
 
   int currThread = localData.nThreads;
   node *cu = localData.root;
@@ -306,7 +308,9 @@ void huffmanTree::decode(vector<shared_ptr<code>> &c, int progAssign) {
 
     //* Create mutex and initalize
     static pthread_mutex_t mutex;
+    static pthread_mutex_t turnMutex;
     pthread_mutex_init(&mutex, nullptr);
+    pthread_mutex_init(&turnMutex, nullptr);
 
     //* Create condition variable and initalize
     static pthread_cond_t waitTurn = PTHREAD_COND_INITIALIZER;
@@ -324,6 +328,7 @@ void huffmanTree::decode(vector<shared_ptr<code>> &c, int progAssign) {
       arg->root = root.get();
       arg->codeVals = c;
       arg->decMessage = message;
+      arg->turnMutex = &turnMutex;
       arg->mutex = &mutex;
       arg->waitTurn = &waitTurn;
       arg->nThreads = i;
