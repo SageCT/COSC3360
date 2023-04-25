@@ -197,7 +197,7 @@ void *decodeThreadMutex(void *arg) {
   //! Start Critical Section 2 (Diff mutex) !//
 
   while (*localData.turn != localData.nThreads)
-    pthread_cond_wait(localData.waitTurn, localData.mutex);
+    pthread_cond_wait(localData.waitTurn, localData.turnMutex);
 
   pthread_mutex_unlock(localData.turnMutex);
   //! End Critical Section 2 (Diff mutex) !//
@@ -209,21 +209,20 @@ void *decodeThreadMutex(void *arg) {
   for (char curr : localData.codeVals.at(currThread)->data)
     curr == '0' ? cu = cu->left.get() : cu = cu->right.get();
 
-  pthread_mutex_lock(localData.mutex);
-  //! Start Critical Section 3 !//
-
   // Once you get the char from the decode, set the data at the given position
   // in the shared string
   for (int position : localData.codeVals.at(currThread)->pos)
     localData.decMessage->at(position) = cu->data.at(0);
-  (*localData.turn)++;
 
   std::cout << "Symbol: " << cu->data << ", Frequency: " << cu->freq
             << ", Code: " << localData.codeVals.at(currThread)->data
             << std::endl;
 
+  pthread_mutex_lock(localData.turnMutex);
+  //! Start Critical Section 3 !//
+  (*localData.turn)++;
   pthread_cond_broadcast(localData.waitTurn);
-  pthread_mutex_unlock(localData.mutex);
+  pthread_mutex_unlock(localData.turnMutex);
   //! End Critical Section 3 !//
 
   return nullptr;
@@ -341,6 +340,7 @@ void huffmanTree::decode(vector<shared_ptr<code>> &c, int progAssign) {
     for (auto &i : threads)
       pthread_join(i, nullptr);
 
+    pthread_mutex_destroy(&turnMutex);
     pthread_mutex_destroy(&mutex);
 
     for (int i = 0; i < arg->decMessage->size(); i++)
