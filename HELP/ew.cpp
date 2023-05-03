@@ -143,10 +143,10 @@ void *decode(void *void_ptr) {
 
   // cout << endl;
 
-  pthread_mutex_lock(arg_ptr->bsemPTR);
+  pthread_mutex_lock(arg_ptr->bsemPTR2);
   (*arg_ptr->turn)++;
   pthread_cond_broadcast(arg_ptr->condVar);
-  pthread_mutex_unlock(arg_ptr->bsemPTR);
+  pthread_mutex_unlock(arg_ptr->bsemPTR2);
 
   return nullptr;
 }
