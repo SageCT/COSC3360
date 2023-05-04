@@ -25,7 +25,7 @@ int main() {
                           : maxEvenThread = nThreads - 2;
   for (int i = 0; i < nThreads; i++) {
     threadNumber[i] =
-        0; // initialize the thread number here (remember to follow the rules
+        i; // initialize the thread number here (remember to follow the rules
            // from the specifications of the assignment)
     // call pthread_create here
   }
