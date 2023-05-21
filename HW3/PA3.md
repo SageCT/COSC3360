@@ -56,3 +56,5 @@ You must use POSIX threads. A penalty of 100% will be applied to submissions usi
 You can only use named POSIX semaphores, pthreads mutex semaphores, or pthreads condition variables to achieve synchronization. Using pthread_join or sleep to synchronize your threads is not allowed (you must use pthread_join to guarantee that the parent thread waits for all its child threads to end before ending its execution). A penalty of 100% will be applied to submissions using the previous system calls to synchronize the child threads.
 You cannot use different memory addresses to pass the information from the parent thread to the child threads.
 You must use the output statement format based on the example above.
+
+SAGECT ADDED ADVICE (Unwritten Rincon Instruction): THE CODE CANNOT HAVE ONLY ONE SEMAPHORE OR A SINGLETON! YOU MUST USE AT LEAST A 2 SEMAPHORE SOLUTION !
