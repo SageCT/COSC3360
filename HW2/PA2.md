@@ -79,3 +79,5 @@ You must use the output statement format based on the example above.
 For the client program, you must use POSIX Threads and stream sockets. A penalty of 100% will be applied to submissions not using POSIX Threads and Stream Sockets.
 You must use multiple processes (fork) and stream sockets for the server program. A penalty of 100% will be applied to submissions not using multiple processes and Stream Sockets.
 The Moodle server will kill your server program after it is done executing each test case.
+
+SAGECT ADVICE: **THE ANSWERS ARE THE SAME AS PA1!**
